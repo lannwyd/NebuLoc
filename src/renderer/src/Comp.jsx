@@ -1,5 +1,6 @@
 import { Sidebar, Sidebaritems } from "./Sidebar";
 import { Boxes, List, Frame } from 'lucide-react';
+import {Display} from "./Display";
 
 function Comp() {
   return (
@@ -16,9 +17,8 @@ function Comp() {
             <Sidebaritems icon={<Boxes />} text="Devices" active={true} ></Sidebaritems>
             <Sidebaritems icon={<List />} text="Clients"></Sidebaritems>
           </Sidebar>
-          
+          <Display></Display>
         </div>
-
       </main>
     </>
   );
