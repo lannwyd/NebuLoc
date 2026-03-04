@@ -14,7 +14,7 @@ export function Sidebar({ children }) {
 
     return (
         <>
-            <div id="side-bar" className={`${expanded ? "w-[25%] lg:w-[20%]" : "w-16"} h-full flex flex-col bg-white border-r-[1px] border-gray-500 shadow-sm shadow-black transition-all duration-300`}>
+            <div id="side-bar" className={`${expanded ? "w-[25%] lg:w-[20%]" : "w-16"}   flex flex-col bg-white rounded-xl m-2 mr-1 shadow-sm shadow-slate-500 transition-all duration-300`}>
                 <div className="p-4 flex justify-center items-center ">
                     <p className= {`${expanded ? "ml-2 w-54" : "w-0"} overflow-hidden transition-all duration-300 flex-1 font-medium text-2xl`}>Overview</p>
                     <button className="p-1.5 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={toggleexpanded}>
