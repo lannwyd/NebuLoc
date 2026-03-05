@@ -21,3 +21,12 @@
         @apply flex items-center justify-center border-black border-2 flex-1 rounded-lg py-4 px-4 mx-2
     }
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+}

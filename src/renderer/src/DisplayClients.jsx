@@ -1,8 +1,8 @@
 import { Plus, ChevronDown, ChevronUp, X, Pencil } from "lucide-react";
 import { useState } from "react";
-import Modal from "./Modal";
+import ModalClients from "./ModalClients";
 
-export function Display() {
+export function DisplayClients() {
     const [isOpen, setIsOpen] = useState(false);
     const data = [
         { name: "zegrour abdelghani",number : "0661875954", device: "1123112344567789", checkoutDate: "2024-01-15" ,duration : 10 , guaranteed : true , isDue : true , Amount : 500},
@@ -14,7 +14,7 @@ export function Display() {
     }
 
     return (<>
-        <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
+        
 
             <div id="stats" className="w-full h-auto flex flex-row items-center justify-center">
                 <div className="card">Devices in use : 10</div>
@@ -22,7 +22,7 @@ export function Display() {
                 <div className="card">Devices in use : 10</div>
             </div>
 
-            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Client">
+            <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Client">
                 <div className="flex flex-col gap-4">
                     <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
                     <select className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
@@ -31,23 +31,27 @@ export function Display() {
                             <option key={index} value={device}>{device}</option>
                         ))}
                     </select>
-                    <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Checkout Date" type="date" />
+                    <input className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
+                    <div className=" flex text-base  px-2  ">
+                        <input className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="insured" />
+                        <label className=" ml-4" htmlFor="insured">did the client pay the insurance</label>
+                    </div>
                     <button
                         onClick={() => setIsOpen(false)}
                         className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
                         Save
                     </button>
                 </div>
-            </Modal>
+            </ModalClients>
 
-            <div className="grid grid-cols-4 mx-2 mt-4 bg-gray-50 rounded-lg px-3 py-2">
+            <div className="grid grid-cols-4 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
                 <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                     <p>Name</p><ChevronDown size={16} />
                 </div>
                 <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                     <p>Device</p><ChevronDown size={16} />
                 </div>
-                <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                <div className="flex items-center cursor-pointer gap-1  text-sm font-semibold text-gray-600">
                     <p>Checkout Date</p><ChevronDown size={16} />
                 </div>
                 <div className="flex justify-end">
@@ -57,7 +61,6 @@ export function Display() {
                 </div>
             </div>
 
-            {/* Table Rows */}
             <div className="flex flex-col mx-2 mt-1">
                 {data.map((item, index) => (
                     <div key={index} className="grid grid-cols-4 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -72,6 +75,6 @@ export function Display() {
                 ))}
             </div>
 
-        </div>
+        
     </>);
 }

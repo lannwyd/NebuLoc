@@ -33,11 +33,11 @@ export function Sidebar({ children }) {
     );
 }
 
-export function Sidebaritems({ icon, text, active, alert }) {
+export function Sidebaritems({ icon, text, active, alert ,onClick}) {
     const { expanded } = useContext(Sidebarcontext);
 
     return (
-        <li className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors group ${active ?
+        <li onClick={onClick} className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors group ${active ?
             "bg-gradient-to-tr from-indigo-200 to-indigo-100 text-indigo-800"
             : "hover:bg-indigo-50 text-gray-600"} ${expanded ? "" : " justify-center"}`}>
             <span className={`${expanded ? "" : "flex-1"} shrink-0`}>{icon}</span>
