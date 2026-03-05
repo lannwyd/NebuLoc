@@ -1,25 +1,76 @@
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Pencil } from "lucide-react";
+import { useState } from "react";
+import Modal from "./Modal";
 
 export function Display() {
+    const [isOpen, setIsOpen] = useState(false);
+    const data = [
+        { name: "zegrour abdelghani",number : "0661875954", device: "1123112344567789", checkoutDate: "2024-01-15" ,duration : 10 , guaranteed : true , isDue : true , Amount : 500},
+        { name: "Jane Smith",number : "0771875954", device: "1123112344508789", checkoutDate: "2025-01-20" ,duration : 10 , guaranteed : true , isDue : true , Amount : 500},
+    ]
+    const devices = ["1123112344567731", "1123112344508789", "1123112374367772", "1123112214567744"]
+    function handleSave() {
+        onClose();
+    }
+
     return (<>
-        <div id="display" className="rounded-2xl  flex-1 overflow-y-auto p-4 m-2 ml-1 bg-white shadow-sm shadow-slate-500">
+        <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
+
             <div id="stats" className="w-full h-auto flex flex-row items-center justify-center">
                 <div className="card">Devices in use : 10</div>
                 <div className="card">Devices in use : 10</div>
                 <div className="card">Devices in use : 10</div>
             </div>
-            <div className="flex flex-row justify-end items-center  bg-slate-400 my-4">
-                <div  className="flex flex-row justify-end items-center h-full bg-indigo-400 rounded-lg py-1 px-2 mr-2 cursor-pointer hover:bg-indigo-500">
-                    <span><Plus /></span>
-                    <span className="">Add New</span>
+
+            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Client">
+                <div className="flex flex-col gap-4">
+                    <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
+                    <select className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
+                        <option value="">Select Device</option>
+                        {devices.map((device, index) => (
+                            <option key={index} value={device}>{device}</option>
+                        ))}
+                    </select>
+                    <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Checkout Date" type="date" />
+                    <button
+                        onClick={() => setIsOpen(false)}
+                        className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
+                        Save
+                    </button>
                 </div>
+            </Modal>
 
-                
+            <div className="grid grid-cols-4 mx-2 mt-4 bg-gray-50 rounded-lg px-3 py-2">
+                <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                    <p>Name</p><ChevronDown size={16} />
+                </div>
+                <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                    <p>Device</p><ChevronDown size={16} />
+                </div>
+                <div className="flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                    <p>Checkout Date</p><ChevronDown size={16} />
+                </div>
+                <div className="flex justify-end">
+                    <div onClick={() => setIsOpen(true)} className="flex items-center gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer hover:bg-indigo-500">
+                        <Plus size={16} /><span>Add New</span>
+                    </div>
+                </div>
             </div>
-            <ul id="Clients-display">
-                <li className=""></li>
-            </ul>
 
+            {/* Table Rows */}
+            <div className="flex flex-col mx-2 mt-1">
+                {data.map((item, index) => (
+                    <div key={index} className="grid grid-cols-4 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <p className="text-sm text-gray-800">{item.name}</p>
+                        <p className="text-sm text-gray-800">{item.device}</p>
+                        <p className="text-sm text-gray-800">{item.checkoutDate}</p>
+                        <div className="flex justify-end gap-2">
+                            <Pencil onClick={() => setIsOpen(true)} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
+                            <X className="text-red-400  cursor-pointer hover:text-red-700" />
+                        </div>
+                    </div>
+                ))}
+            </div>
 
         </div>
     </>);
