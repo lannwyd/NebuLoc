@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-export default function ModalClients({ isOpen, onClose, title, children }) {
+export default function ModalDevices({ isOpen, onClose, title, children }) {
 
     return (
         <>
