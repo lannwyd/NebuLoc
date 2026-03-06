@@ -3,6 +3,12 @@ import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 
+const { app, ipcMain } = require('electron')
+const fs = require('fs')
+const path = require('path')
+const dataPath = path.join(app.getPath('userData'), 'clients.json')
+
+
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -73,3 +79,33 @@ app.on("window-all-closed", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+// initialize file if it doesn't exist
+if (!fs.existsSync(dataPath)) {
+    fs.writeFileSync(dataPath, JSON.stringify([]))
+}
+
+// read
+ipcMain.handle('get-clients', () => {
+    return JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+})
+
+// add
+ipcMain.handle('add-client', (event, newClient) => {
+    const clients = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+    clients.push(newClient)
+    fs.writeFileSync(dataPath, JSON.stringify(clients))
+})
+
+// update
+ipcMain.handle('update-client', (event, index, updatedClient) => {
+    const clients = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+    clients[index] = updatedClient
+    fs.writeFileSync(dataPath, JSON.stringify(clients))
+})
+
+// delete
+ipcMain.handle('delete-client', (event, index) => {
+    const clients = JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+    clients.splice(index, 1)
+    fs.writeFileSync(dataPath, JSON.stringify(clients))
+})

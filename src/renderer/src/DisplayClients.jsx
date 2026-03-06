@@ -9,6 +9,7 @@ export function DisplayClients() {
         { name: "Jane Smith", number: "0771875954", device: "1123112344508789", checkoutDate: "2025-01-20", duration: 10, guaranteed: true, isDue: true, Amount: 500 },
     ]
     const devices = ["1123112344567731", "1123112344508789", "1123112374367772", "1123112214567744"]
+    
     function handleSave() {
         onClose();
     }
@@ -84,7 +85,7 @@ export function DisplayClients() {
                 <p>Amount</p><ChevronDown size={16} />
             </div>
             <div className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
-                <Bell size={16}/> <ChevronDown className="" size={16} />
+                <ChevronDown className="" size={16} />
             </div>
             <div className="col-span-1" />
         </div>
