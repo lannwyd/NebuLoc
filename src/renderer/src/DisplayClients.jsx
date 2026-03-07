@@ -1,15 +1,53 @@
 import { Plus, ChevronDown, ChevronUp, X, Pencil, Bell } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ModalClients from "./ModalClients";
 
 export function DisplayClients() {
     const [isOpen, setIsOpen] = useState(false);
-    const data = [
-        { name: "zegrour abdelghani", number: "0661875954", device: "1123112344567789", checkoutDate: "2024-01-15", duration: 10, guaranteed: true, isDue: true, Amount: 500 },
-        { name: "Jane Smith", number: "0771875954", device: "1123112344508789", checkoutDate: "2025-01-20", duration: 10, guaranteed: true, isDue: true, Amount: 500 },
-    ]
-    const devices = ["1123112344567731", "1123112344508789", "1123112374367772", "1123112214567744"]
-    
+    const [data, setData] = useState([])
+    const [devices, setDevices] = useState([])
+    const [newClient, setNewClient] = useState({
+        name: "", number: "", device: "", checkoutDate: "",
+        duration: 1, guaranteed: false, Amount: 0, status: "still"
+    })
+
+    useEffect(() => {
+        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+    }, [])
+
+    async function addClient() {
+        await window.electron.ipcRenderer.invoke('add-client', newClient)
+        await window.electron.ipcRenderer.invoke('update-device-status', newClient.device, 'in-use')
+        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+        setIsOpen(false)
+    }
+
+    async function deleteClient(index) {
+        const client = data[index]
+        await window.electron.ipcRenderer.invoke('delete-client', index)
+        await window.electron.ipcRenderer.invoke('update-device-status', client.device, 'available')
+        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+    }
+
+    function calculateDueDate(checkoutDate, duration) {
+        const date = new Date(checkoutDate)
+        date.setDate(date.getDate() + Number(duration) + 1)
+        return date.toISOString().split('T')[0]  
+    }
+
+    const STATUS = {
+        STILL: "still",
+        DUE: "due",
+        DONE: "done"
+    }
+    const statusStyles = {
+        still: "bg-gray-100 text-gray-600 shadow-gray-400",
+        due: "bg-red-100 text-red-600 shadow-red-300",
+        done: "bg-green-100 text-green-600 shadow-green-300",
+    }
     function handleSave() {
         onClose();
     }
@@ -29,29 +67,29 @@ export function DisplayClients() {
 
         <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Client">
             <div className="flex flex-col gap-4">
-                <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
-                <input className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Phone number" />
+                <input value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
+                <input value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Phone number" />
 
-                <select className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
+                <select value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
                     <option value="">Select Device</option>
-                    {devices.map((device, index) => (
-                        <option key={index} value={device}>{device}</option>
+                    {devices.filter(d => d.status === "available").map((device, index) => (
+                        <option key={index} value={device.id}>{device.id}</option>
                     ))}
                 </select>
-                <input className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
+                <input value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
                 <div className="flex justify-between items-baseline">
                     <label htmlFor="duration">Duration : ( days )</label>
-                    <input className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="duration" min={"1"} type="number" id="duration" />
+                    <input value={newClient.duration} onChange={(e) => setNewClient({ ...newClient, duration: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="duration" min={"1"} type="number" id="duration" />
                 </div>
-                <input className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" min={"0"} type="number" id="duration" />
+                <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" min={"0"} type="number" id="duration" />
 
 
                 <div className=" flex text-base  px-2  ">
-                    <input className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="insured" />
+                    <input checked={newClient.guaranteed} onChange={(e) => setNewClient({ ...newClient, guaranteed: e.target.checked })} className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="insured" />
                     <label className=" ml-4" htmlFor="insured">did the client pay the insurance ( 2000 DA)</label>
                 </div>
                 <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => { addClient(); setIsOpen(false) }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
                     Save
                 </button>
@@ -98,13 +136,17 @@ export function DisplayClients() {
                     <p className="text-sm text-gray-800 col-span-3">{item.device}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.checkoutDate}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.duration}</p>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">{item.checkoutDate}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">    {calculateDueDate(item.checkoutDate, item.duration)}</p>
                     <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center ">{item.guaranteed.toString()}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.Amount}</p>
-                    <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.isDue.toString()}</p>
-                    <div className="flex justify-end gap-2">
+                    <div className="col-span-1 flex items-start justify-center">
+                        <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[item.status]}`}>
+                            {item.status}
+                        </span>
+                    </div>
+                    <div className="col-span-1 flex justify-end gap-2">
                         <Pencil onClick={() => setIsOpen(true)} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
-                        <X className="text-red-400  cursor-pointer hover:text-red-700" />
+                        <X onClick={() => deleteClient(index)} className="text-red-400  cursor-pointer hover:text-red-700" />
                     </div>
                 </div>
             ))}

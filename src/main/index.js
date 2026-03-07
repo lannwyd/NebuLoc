@@ -2,12 +2,12 @@ import { app, shell, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
+import { createRequire } from 'module';
+import fs from 'fs';
+import path from 'path';
 
-const { app, ipcMain } = require('electron')
-const fs = require('fs')
-const path = require('path')
-const dataPath = path.join(app.getPath('userData'), 'clients.json')
-
+const dataPath = path.join(app.getPath('userData'), 'clients.json');
+const devicesPath = path.join(app.getPath('userData'), 'devices.json');
 
 function createWindow() {
   // Create the browser window.
@@ -66,21 +66,7 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-// initialize file if it doesn't exist
-if (!fs.existsSync(dataPath)) {
+  if (!fs.existsSync(dataPath)) {
     fs.writeFileSync(dataPath, JSON.stringify([]))
 }
 
@@ -109,3 +95,44 @@ ipcMain.handle('delete-client', (event, index) => {
     clients.splice(index, 1)
     fs.writeFileSync(dataPath, JSON.stringify(clients))
 })
+
+if (!fs.existsSync(devicesPath)) {
+    fs.writeFileSync(devicesPath, JSON.stringify([]))
+}
+
+ipcMain.handle('get-devices', () => {
+    return JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
+})
+
+ipcMain.handle('add-device', (event, newDevice) => {
+    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
+    devices.push(newDevice)
+    fs.writeFileSync(devicesPath, JSON.stringify(devices))
+})
+
+ipcMain.handle('delete-device', (event, index) => {
+    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
+    devices.splice(index, 1)
+    fs.writeFileSync(devicesPath, JSON.stringify(devices))
+})
+
+ipcMain.handle('update-device-status', (event, id, status) => {
+    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
+    const device = devices.find(d => d.id === id)
+    if (device) device.status = status
+    fs.writeFileSync(devicesPath, JSON.stringify(devices))
+})
+});
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
+// initialize file if it doesn't exist
