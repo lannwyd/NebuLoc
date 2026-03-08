@@ -110,9 +110,16 @@ ipcMain.handle('add-device', (event, newDevice) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
+
 ipcMain.handle('delete-device', (event, index) => {
     const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
     devices.splice(index, 1)
+    fs.writeFileSync(devicesPath, JSON.stringify(devices))
+})
+
+ipcMain.handle('update-device', (event, index, updatedId) => {
+    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
+    devices[index].id = updatedId
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 

@@ -1,9 +1,10 @@
 import { Plus, ChevronDown, ChevronUp, X, Pencil } from "lucide-react";
-import { useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import ModalDevices from "./ModalDevices"
 
 export function Devices() {
     const [isOpen, setIsOpen] = useState(false);
+    const [editIndex, setEditIndex] = useState(null);
     const [devices, setDevices] = useState([]);
     const [newDeviceId, setNewDeviceId] = useState("")
 
@@ -12,9 +13,14 @@ export function Devices() {
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
     }, [])
 
-    async function addDevice(id) {
-        await window.electron.ipcRenderer.invoke('add-device', { id, status: "available" })
+    async function saveDevice() {
+        if (editIndex === null) {
+            await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available" })
+        } else {
+            await window.electron.ipcRenderer.invoke('update-device', editIndex, newDeviceId)
+        }
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+        setIsOpen(false)
     }
 
     async function deleteDevice(index) {
@@ -35,7 +41,11 @@ export function Devices() {
                 <p>Device</p><ChevronDown size={16} />
             </div>
             <div className="flex justify-end">
-                <div onClick={() => setIsOpen(true)} className="flex items-center gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
+                <div onClick={() => {
+                    setNewDeviceId("")
+                    setEditIndex(null)
+                    setIsOpen(true)
+                }} className="flex items-center gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
                     <Plus size={16} /><span>Add New</span>
                 </div>
             </div>
@@ -49,9 +59,9 @@ export function Devices() {
                     placeholder="id number"
                 />
                 <button
-                    onClick={() => { addDevice(newDeviceId); setIsOpen(false); }}
+                    onClick={() => { saveDevice(); setIsOpen(false); }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
-                    Save
+                    {editIndex === null ? "Save" : "Update"}
                 </button>
             </div>
         </ModalDevices>
@@ -68,8 +78,12 @@ export function Devices() {
                         </span>
                     </div>
                     <div className="col-span-1 flex justify-end gap-2">
-                        <Pencil onClick={() => setIsOpen(true)} className="text-indigo-500 w-4 cursor-pointer hover:text-indigo-800" />
-                        <X className="text-red-400 cursor-pointer hover:text-red-700" />
+                        <Pencil onClick={() => {
+                            setNewDeviceId(device.id)
+                            setEditIndex(index)
+                            setIsOpen(true)
+                        }} className="text-indigo-500 w-4 cursor-pointer hover:text-indigo-800" />
+                        <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>
                 </div>
             ))}

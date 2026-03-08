@@ -4,6 +4,7 @@ import ModalClients from "./ModalClients";
 
 export function DisplayClients() {
     const [isOpen, setIsOpen] = useState(false);
+    const [editIndex, setEditIndex] = useState(null);
     const [data, setData] = useState([])
     const [devices, setDevices] = useState([])
     const [newClient, setNewClient] = useState({
@@ -16,9 +17,13 @@ export function DisplayClients() {
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
     }, [])
 
-    async function addClient() {
-        await window.electron.ipcRenderer.invoke('add-client', newClient)
-        await window.electron.ipcRenderer.invoke('update-device-status', newClient.device, 'in-use')
+    async function saveClient() {
+        if (editIndex === null) {
+            await window.electron.ipcRenderer.invoke('add-client', newClient)
+            await window.electron.ipcRenderer.invoke('update-device-status', newClient.device, 'in-use')
+        } else {
+            await window.electron.ipcRenderer.invoke('update-client', editIndex, newClient)
+        }
         window.electron.ipcRenderer.invoke('get-clients').then(setData)
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
@@ -35,7 +40,7 @@ export function DisplayClients() {
     function calculateDueDate(checkoutDate, duration) {
         const date = new Date(checkoutDate)
         date.setDate(date.getDate() + Number(duration) + 1)
-        return date.toISOString().split('T')[0]  
+        return date.toISOString().split('T')[0]
     }
 
     const STATUS = {
@@ -59,7 +64,11 @@ export function DisplayClients() {
             <div className="card">Devices in use : 10</div>
             <div className="card">Devices in use : 10</div>
             <div className="flex justify-end mx-2 h-full">
-                <div onClick={() => setIsOpen(true)} className="flex items-center  gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
+                <div onClick={() => {
+                    setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: 1, guaranteed: false, Amount: 0, status: "still" })
+                    setEditIndex(null)
+                    setIsOpen(true)
+                }} className="flex items-center  gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
                     <Plus size={16} /><span>Add New</span>
                 </div>
             </div>
@@ -89,10 +98,12 @@ export function DisplayClients() {
                     <label className=" ml-4" htmlFor="insured">did the client pay the insurance ( 2000 DA)</label>
                 </div>
                 <button
-                    onClick={() => { addClient(); setIsOpen(false) }}
+                    onClick={() => { saveClient(); setIsOpen(false) }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
-                    Save
+                    {editIndex === null ? "Save" : "Update"}
+
                 </button>
+
             </div>
         </ModalClients>
 
@@ -145,7 +156,11 @@ export function DisplayClients() {
                         </span>
                     </div>
                     <div className="col-span-1 flex justify-end gap-2">
-                        <Pencil onClick={() => setIsOpen(true)} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
+                        <Pencil onClick={() => {
+                            setNewClient(item)
+                            setEditIndex(index)
+                            setIsOpen(true)
+                        }} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
                         <X onClick={() => deleteClient(index)} className="text-red-400  cursor-pointer hover:text-red-700" />
                     </div>
                 </div>
