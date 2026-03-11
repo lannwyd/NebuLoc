@@ -20,22 +20,29 @@ export function DisplayClients() {
     function getStatus(duedate) {
 
         const date = new Date(duedate);
-        date.setHours(0,0,0,0);
+        date.setHours(0, 0, 0, 0);
         const today = new Date();
-        today.setHours(0,0,0,0);
-        
-    if (today > date){
-        return "due"
-    }
-    return "still";
+        today.setHours(0, 0, 0, 0);
+
+        if (today > date) {
+            return "due"
+        }
+        return "still";
     }
 
-    async function saveClient() {
+    async function saveClient(statusOverride = null) {
+        const clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
+
         if (editIndex === null) {
-            await window.electron.ipcRenderer.invoke('add-client', newClient)
-            await window.electron.ipcRenderer.invoke('update-device-status', newClient.device, 'in-use')
+            await window.electron.ipcRenderer.invoke('add-client', clientToSave)
+            await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
         } else {
-            await window.electron.ipcRenderer.invoke('update-client', editIndex, newClient)
+            await window.electron.ipcRenderer.invoke('update-client', editIndex, clientToSave)
+            if (clientToSave.status === "done") {
+                await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'available')
+            } else {
+                await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
+            }
         }
         window.electron.ipcRenderer.invoke('get-clients').then(setData)
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
@@ -87,7 +94,7 @@ export function DisplayClients() {
             </div>
         </div>
 
-        <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Client">
+        <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={`${editIndex === null ? "Add Cew Client" : "Update Client"}`}>
             <div className="flex flex-col gap-4">
                 <input value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
                 <input value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Phone number" />
@@ -101,7 +108,7 @@ export function DisplayClients() {
                 <input value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
                 <div className="flex justify-between items-baseline">
                     <label htmlFor="duration">Duration : ( days )</label>
-                    <input value={newClient.duration} onChange={(e) => setNewClient({ ...newClient, duration: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " type="number" placeholder="duration" min={"1"}  id="duration" />
+                    <input value={newClient.duration} onChange={(e) => setNewClient({ ...newClient, duration: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " type="number" placeholder="duration" min={"1"} id="duration" />
                 </div>
                 <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" min={"0"} type="number" id="duration" />
 
@@ -111,19 +118,42 @@ export function DisplayClients() {
                     <label className=" ml-4" htmlFor="insured">did the client pay the insurance ( 2000 DA)</label>
                 </div>
                 <div className="flex gap-5">
-                    <button
-                        onClick={() => { newClient.status = "done" ;setIsOpen(false) }}
-                        className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500">
-                        Device returned
-                    </button>
-                    <button
-                        onClick={() => { saveClient(); setIsOpen(false) }}
-                        className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
-                        {editIndex === null ? "Save" : "Update"}
-                    </button>    
-                </div>
-                
+                    {editIndex === null ?
+                        <>
+                            <button
+                                onClick={() => { saveClient(); setIsOpen(false) }}
+                                className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
+                                {editIndex === null ? "Save" : "Update"}
+                            </button>
+                        </> :
+                        newClient.status === "done" ?
+                            <>
+                                <button
+                                    onClick={() => { saveClient("still"); setIsOpen(false) }}
+                                    className="bg-red-400 flex-1 text-white rounded-lg py-2 hover:bg-red-500">
+                                    Uncheck
+                                </button>
+                                <button
+                                    onClick={() => { saveClient(); setIsOpen(false) }}
+                                    className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
+                                    {editIndex === null ? "Save" : "Update"}
+                                </button>
+                            </> :
+                            <>
+                                <button
+                                    onClick={() => { saveClient("done"); setIsOpen(false) }}
+                                    className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500">
+                                    Device returned
+                                </button>
+                                <button
+                                    onClick={() => { saveClient(); setIsOpen(false) }}
+                                    className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
+                                    {editIndex === null ? "Save" : "Update"}
+                                </button>
+                            </>
 
+                    }
+                </div>
 
 
             </div>
@@ -163,9 +193,9 @@ export function DisplayClients() {
 
         <div className="flex flex-col mx-2 mt-1">
             {data.map((item, index) => {
-                const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate ,item.duration ));
+                const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration));
 
-                return(<div key={index} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                return (<div key={index} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-2 px-1">{item.name}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.number}</p>
                     <p className="text-sm text-gray-800 col-span-3">{item.device}</p>
@@ -175,9 +205,7 @@ export function DisplayClients() {
                     <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center ">{item.guaranteed.toString()}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.Amount}</p>
                     <div className="col-span-1 flex items-start justify-center">
-                        <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${
-                            
-                            statusStyles[currentstatus]}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
                             {currentstatus}
                         </span>
                     </div>

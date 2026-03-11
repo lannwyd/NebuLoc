@@ -14,11 +14,8 @@ export function Devices() {
     }, [])
 
     async function saveDevice() {
-        if (editIndex === null) {
             await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available" })
-        } else {
-            await window.electron.ipcRenderer.invoke('update-device', editIndex, newDeviceId)
-        }
+        
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
     }
@@ -50,7 +47,8 @@ export function Devices() {
                 </div>
             </div>
         </div>
-        <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New Device">
+
+        <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New device">
             <div className="flex flex-col gap-4">
                 <input
                     value={newDeviceId}
@@ -61,7 +59,7 @@ export function Devices() {
                 <button
                     onClick={() => { saveDevice(); setIsOpen(false); }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
-                    {editIndex === null ? "Save" : "Update"}
+                    "Save"
                 </button>
             </div>
         </ModalDevices>
@@ -78,11 +76,6 @@ export function Devices() {
                         </span>
                     </div>
                     <div className="col-span-1 flex justify-end gap-2">
-                        <Pencil onClick={() => {
-                            setNewDeviceId(device.id)
-                            setEditIndex(index)
-                            setIsOpen(true)
-                        }} className="text-indigo-500 w-4 cursor-pointer hover:text-indigo-800" />
                         <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>
                 </div>

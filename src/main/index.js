@@ -125,12 +125,12 @@ ipcMain.handle('update-device', (event, index, updatedId) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
-ipcMain.handle('update-device-status', (event, id, status) => {
-    const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
-    const device = devices.find(d => d.id === id)
-    if (device) device.status = status
-    fs.writeFileSync(devicesPath, JSON.stringify(devices))
-})
+
+
+
+
+
+
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
