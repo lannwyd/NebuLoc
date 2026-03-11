@@ -12,15 +12,17 @@ const devicesPath = path.join(app.getPath('userData'), 'devices.json');
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    useContentSize: true,
-    width: 1200,
-    height: 720,
+
+  width: 1280,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === "linux" ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
-      sandbox: false,
+        preload: join(__dirname, "../preload/index.js"),
+        sandbox: false,
     },
   });
 
