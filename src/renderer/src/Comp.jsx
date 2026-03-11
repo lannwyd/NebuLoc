@@ -2,6 +2,9 @@ import { Sidebar, Sidebaritems } from "./Sidebar";
 import { Boxes, List, Frame ,Search ,Bell,CircleUserRound} from 'lucide-react';
 import { DisplayClients } from "./DisplayClients";
 import { Devices } from "./Devices";
+import  {Availability}  from "./Availability";
+import  {Dashboard}  from "./Dashboard";
+
 
 import { useState } from "react";
 
@@ -36,7 +39,7 @@ function Comp() {
           </Sidebar>
           <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
             <div key={activePage} className="flex flex-col flex-1 animate-fadeIn">
-              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> :activePage === "availability"?"" :activePage === "dashboard"?"" : ""}
+              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> :activePage === "availability"?<Availability/> :activePage === "dashboard"?<Dashboard/> : ""}
 
             </div>
           </div>

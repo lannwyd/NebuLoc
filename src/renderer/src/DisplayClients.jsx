@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Pencil, Bell } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Pencil, Bell, IndentIcon, ChevronsUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import ModalClients from "./ModalClients";
 
@@ -7,23 +7,28 @@ export function DisplayClients() {
     const [editIndex, setEditIndex] = useState(null);
     const [data, setData] = useState([])
     const [devices, setDevices] = useState([])
+    const [sortKey, setSortKey] = useState(null)
+    const [sortDir, setSortDir] = useState(0)
+    const [originalData, setOriginalData] = useState([])
+
     const [newClient, setNewClient] = useState({
         name: "", number: "", device: "", checkoutDate: "",
         duration: 1, guaranteed: false, Amount: 0, status: "still"
     })
 
     useEffect(() => {
-        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-clients').then((d) => {
+            setData(d);
+            setOriginalData(d);
+        })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
     }, [])
 
     function getStatus(duedate) {
-
         const date = new Date(duedate);
         date.setHours(0, 0, 0, 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         if (today > date) {
             return "due"
         }
@@ -44,7 +49,10 @@ export function DisplayClients() {
                 await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
             }
         }
-        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-clients').then((d) => {
+            setData(d)
+            setOriginalData(d)
+        })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
     }
@@ -54,11 +62,36 @@ export function DisplayClients() {
         await window.electron.ipcRenderer.invoke('delete-client', index)
         await window.electron.ipcRenderer.invoke('update-device-status', client.device, 'available')
         window.electron.ipcRenderer.invoke('get-clients').then(setData)
-        window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+        window.electron.ipcRenderer.invoke('get-clients').then((d) => {
+            setData(d)
+            setOriginalData(d)  // ← missing
+        })
     }
 
+    function channgedisplay(basedOn) {
+        if (sortKey === basedOn) {
+            if (sortDir === 0) setSortDir(1)
+            else if (sortDir === 1) setSortDir(-1)
+            else { setSortDir(0); setSortKey(null) }
+        } else {
+            setSortKey(basedOn)
+            setSortDir(1)
+        }
+
+    }
+    const displayData = sortKey === null ? originalData : [...data].sort((a, b) => {
+        switch (sortKey) {
+            case "name": return a.name.localeCompare(b.name) * sortDir
+            case "checkoutdate": return (new Date(a.checkoutDate) - new Date(b.checkoutDate)) * sortDir
+            case "duedate": return (new Date(calculateDueDate(a.checkoutDate, a.duration)) - new Date(calculateDueDate(b.checkoutDate, b.duration))) * sortDir
+            case "status": return a.status.localeCompare(b.status) * sortDir
+        }
+    })
+
     function calculateDueDate(checkoutDate, duration) {
+        if (!checkoutDate) return "N/A"
         const date = new Date(checkoutDate)
+        if (isNaN(date.getTime())) return "N/A"
         date.setDate(date.getDate() + Number(duration) + 1)
         return date.toISOString().split('T')[0]
     }
@@ -151,17 +184,17 @@ export function DisplayClients() {
                                     {editIndex === null ? "Save" : "Update"}
                                 </button>
                             </>
-
                     }
                 </div>
-
-
             </div>
         </ModalClients>
 
         <div style={{ gridTemplateColumns: 'repeat(17, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
-            <div className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Name</p><ChevronDown size={16} />
+            <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                <p>Name</p> {sortKey === "name"
+                    ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+                    : <ChevronsUpDown size={16} />
+                }
             </div>
             <div className="col-span-2 flex items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Number</p>
@@ -169,33 +202,42 @@ export function DisplayClients() {
             <div className="col-span-3 flex  items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Device</p>
             </div>
-            <div className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Checkout</p><ChevronDown size={16} />
+            <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                <p>Checkout</p>{sortKey === "checkoutdate"
+                    ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+                    : <ChevronsUpDown size={16} />
+                }
             </div>
             <div className="col-span-1 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Duration</p>
             </div>
-            <div className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Due</p><ChevronDown size={16} />
+            <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+                <p>Due</p>{sortKey === "duedate"
+                    ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+                    : <ChevronsUpDown size={16} />
+                }
             </div>
-            <div className="col-span-2 flex justify-center items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Guaranteed</p><ChevronDown size={16} />
+            <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>Guaranteed</p>
             </div>
 
             <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Amount</p><ChevronDown size={16} />
+                <p>Amount</p>
             </div>
-            <div className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
-                <ChevronDown className="" size={16} />
+            <div onClick={() => channgedisplay("status")} className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
+                {sortKey === "status"
+                    ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
+                    : <ChevronsUpDown size={16} />
+                }
             </div>
             <div className="col-span-1" />
         </div>
 
         <div className="flex flex-col mx-2 mt-1">
-            {data.map((item, index) => {
+            {displayData.map((item) => {
                 const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration));
 
-                return (<div key={index} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                return (<div key={item.name + item.number} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-2 px-1">{item.name}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.number}</p>
                     <p className="text-sm text-gray-800 col-span-3">{item.device}</p>
@@ -211,11 +253,17 @@ export function DisplayClients() {
                     </div>
                     <div className="col-span-1 flex justify-end gap-2">
                         <Pencil onClick={() => {
+                            const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
+
                             setNewClient(item)
-                            setEditIndex(index)
+                            setEditIndex(Index)
                             setIsOpen(true)
                         }} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
-                        <X onClick={() => deleteClient(index)} className="text-red-400  cursor-pointer hover:text-red-700" />
+                        <X onClick={() => {
+                            const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
+
+                            deleteClient(Index);
+                        }} className="text-red-400  cursor-pointer hover:text-red-700" />
                     </div>
                 </div>
                 )

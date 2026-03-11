@@ -7,15 +7,19 @@ export function Devices() {
     const [editIndex, setEditIndex] = useState(null);
     const [devices, setDevices] = useState([]);
     const [newDeviceId, setNewDeviceId] = useState("")
+    const [clients, setClients] = useState([]);
+
 
 
     useEffect(() => {
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
+        window.electron.ipcRenderer.invoke('get-clients').then(setClients)
+
     }, [])
 
     async function saveDevice() {
-            await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available" })
-        
+        await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available", workingDuration: 0 })
+
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
     }
@@ -28,6 +32,13 @@ export function Devices() {
 
     function handleSave() {
         onClose();
+    }
+
+
+    function getWorkingDuration(deviceId) {
+        return clients
+            .filter(c => c.device === deviceId)
+            .reduce((total, c) => total + Number(c.duration), 0)
     }
 
     return (<>
@@ -68,13 +79,14 @@ export function Devices() {
 
         <div className="flex flex-col mx-2 mt-1">
             {devices.map((device, index) => (
-                <div key={index} className="grid grid-cols-3 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <div key={index} className="grid grid-cols-4 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-1">{device.id}</p>
-                    <div className="col-span-1 flex justify-center">
+                    <div className="col-span-1 flex justify-start">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${device.status === "available" ? "bg-green-100 text-green-600 shadow-green-300" : "bg-red-100 text-red-600 shadow-red-300"}`}>
                             {device.status}
                         </span>
                     </div>
+                    <p className="text-sm text-gray-800 col-span-1">{getWorkingDuration(device.id)} days</p>
                     <div className="col-span-1 flex justify-end gap-2">
                         <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>
