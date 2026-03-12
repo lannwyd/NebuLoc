@@ -13,7 +13,7 @@ export function DisplayClients() {
 
     const [newClient, setNewClient] = useState({
         name: "", number: "", device: "", checkoutDate: "",
-        duration: 1, guaranteed: false, Amount: 0, status: "still"
+        duration: 1, guaranteed: false, Amount: "", status: "still"
     })
 
     useEffect(() => {
@@ -96,6 +96,13 @@ export function DisplayClients() {
         return date.toISOString().split('T')[0]
     }
 
+    function calculateDevices() {
+        return data.filter(c => c.status !== "done").length
+    }
+    function calculateAvailable() {
+        return devices.filter(d => d.status === "available").length
+    }
+
     const STATUS = {
         STILL: "still",
         DUE: "due",
@@ -114,11 +121,11 @@ export function DisplayClients() {
 
 
         <div id="stats" className="w-full h-auto flex flex-row items-center justify-center">
-            <div className="card">Devices in use : 10</div>
-            <div className="card">Devices in use : 10</div>
+            <div className="card ">Devices in use : {calculateDevices()}</div>
+            <div className="card">Devices Available : {calculateAvailable()}</div>
             <div className="flex justify-end mx-2 h-full">
                 <div onClick={() => {
-                    setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: 1, guaranteed: false, Amount: 0, status: "still" })
+                    setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: 1, guaranteed: false, Amount: "", status: "still" })
                     setEditIndex(null)
                     setIsOpen(true)
                 }} className="flex items-center  gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
@@ -143,7 +150,7 @@ export function DisplayClients() {
                     <label htmlFor="duration">Duration : ( days )</label>
                     <input value={newClient.duration} onChange={(e) => setNewClient({ ...newClient, duration: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " type="number" placeholder="duration" min={"1"} id="duration" />
                 </div>
-                <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" min={"0"} type="number" id="duration" />
+                <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" type="number" id="duration" />
 
 
                 <div className=" flex text-base  px-2  ">
