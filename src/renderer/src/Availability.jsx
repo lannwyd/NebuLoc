@@ -10,7 +10,6 @@ export function Availability() {
     const [clients, setClients] = useState([]);
 
     const [startDate, setStartDate] = useState("");
-    const [duration, setDuration] = useState(0);
     const [results, setResults] = useState(null);
 
     useEffect(() => {
@@ -18,30 +17,26 @@ export function Availability() {
         window.electron.ipcRenderer.invoke('get-clients').then(setClients)
     }, [])
 
-    function displayData() {
+    function isDeviceAvailable(deviceId, startDate) {
+    const reqStart = new Date(startDate)
 
-    }
-    function isDeviceAvailable(deviceId, startDate, duration) {
-        const reqStart = new Date(startDate)
-        const reqEnd = new Date(startDate)
-        reqEnd.setDate(reqEnd.getDate() + Number(duration))
+    const conflict = clients.some(client => {
+        if (client.device !== deviceId) return false
+        if (client.status === "done") return false
 
-        const conflict = clients.some(client => {
-            const clientStart = new Date(client.checkoutDate)
-            const clientEnd = new Date(client.checkoutDate)
-            clientEnd.setDate(clientEnd.getDate() + Number(client.duration))
-            if (client.device !== deviceId) return false
-            if (client.status === "done") return false
+        const clientStart = new Date(client.checkoutDate)
+        const clientEnd = new Date(client.checkoutDate)
+        clientEnd.setDate(clientEnd.getDate() + Number(client.duration))
 
-            return reqStart <= clientEnd && reqEnd >= clientStart
-        })
-        return !conflict
-    }
+        return reqStart >= clientStart && reqStart <= clientEnd
+    })
+    return !conflict
+}
 
     function search() {
-        if (!startDate || !duration) return
+        if (!startDate ) return
         const available = allDevices.filter(device => (
-            isDeviceAvailable(device.id, startDate, duration)
+            isDeviceAvailable(device.id, startDate)
         ))
         setResults(available)
 
@@ -55,12 +50,9 @@ export function Availability() {
 
     return (
         <>
-            <div className="grid grid-cols-6 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
+            <div className="grid grid-cols-3 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
                 <label className="flex items-center" htmlFor="range">Enter the date :</label>
                 <input onChange={e => setStartDate(e.target.value)} value={startDate} className="border border-gray-200 rounded-lg p-2 text-sm" type="date" id="range" />
-                <p className="flex justify-center items-center font-bold text-xl ">-</p>
-                <label className="flex items-center" htmlFor="duration">Enter the date :</label>
-                <input onChange={e => setDuration(e.target.value)} value={duration} className="border border-gray-200 rounded-lg p-2 text-sm " type="number" placeholder="Days" min={0} />
                 <div onClick={() => search()} className="flex justify-end mx-2 h-full">
                     <div className="flex items-center justify-center w-28  gap-1 bg-green-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-green-500">
                         <span>Search</span>

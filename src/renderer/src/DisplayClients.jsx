@@ -9,11 +9,11 @@ export function DisplayClients() {
     const [devices, setDevices] = useState([])
     const [sortKey, setSortKey] = useState(null)
     const [sortDir, setSortDir] = useState(0)
-    const [originalData, setOriginalData] = useState([])
+    const [originalData, setOriginalData] = useState([]);
 
     const [newClient, setNewClient] = useState({
         name: "", number: "", device: "", checkoutDate: "",
-        duration: 1, guaranteed: false, Amount: "", status: "still"
+        duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null
     })
 
     useEffect(() => {
@@ -23,6 +23,15 @@ export function DisplayClients() {
         })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
     }, [])
+
+    function isFormValid() {
+        return newClient.name !== "" &&
+            newClient.number !== "" &&
+            newClient.device !== "" &&
+            newClient.checkoutDate !== "" &&
+            newClient.duration !== null &&
+            newClient.Amount !== ""
+    }
 
     function getStatus(duedate) {
         const date = new Date(duedate);
@@ -64,7 +73,7 @@ export function DisplayClients() {
         window.electron.ipcRenderer.invoke('get-clients').then(setData)
         window.electron.ipcRenderer.invoke('get-clients').then((d) => {
             setData(d)
-            setOriginalData(d)  // ← missing
+            setOriginalData(d)
         })
     }
 
@@ -87,6 +96,22 @@ export function DisplayClients() {
             case "status": return a.status.localeCompare(b.status) * sortDir
         }
     })
+
+    async function extendClient() {
+        const extended = {
+            ...newClient,
+            duration: Number(newClient.duration) + Number(newClient.extendedDuration),
+            status: "still",
+            Bill: Number(newClient.Bill) + Number(newClient.extendedDuration === 10 ? 250 : newClient.extendedDuration === 20 ? 500 : 750),
+            extendedDuration: null
+        }
+        await window.electron.ipcRenderer.invoke('update-client', editIndex, extended)
+        window.electron.ipcRenderer.invoke('get-clients').then((d) => {
+            setData(d)
+            setOriginalData(d)
+        })
+        setIsOpen(false)
+    }
 
     function calculateDueDate(checkoutDate, duration) {
         if (!checkoutDate) return "N/A"
@@ -125,7 +150,7 @@ export function DisplayClients() {
             <div className="card">Devices Available : {calculateAvailable()}</div>
             <div className="flex justify-end mx-2 h-full">
                 <div onClick={() => {
-                    setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: 1, guaranteed: false, Amount: "", status: "still" })
+                    setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null })
                     setEditIndex(null)
                     setIsOpen(true)
                 }} className="flex items-center  gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
@@ -147,8 +172,23 @@ export function DisplayClients() {
                 </select>
                 <input value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
                 <div className="flex justify-between items-baseline">
-                    <label htmlFor="duration">Duration : ( days )</label>
-                    <input value={newClient.duration} onChange={(e) => setNewClient({ ...newClient, duration: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " type="number" placeholder="duration" min={"1"} id="duration" />
+                    <label >Duration : ( days )</label>
+                    <div className="flex flex-col flex-1 justify-center ">
+                        <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                            <span>10 days</span>
+                            <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 10} onChange={(e) => setNewClient({ ...newClient, duration: 10, Amount: 500 })} />
+                        </label>
+                        <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                            <span>20 days</span>
+
+                            <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 20} onChange={(e) => setNewClient({ ...newClient, duration: 20, Amount: 750 })} />
+                        </label>
+                        <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                            <span>30 days</span>
+
+                            <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 30} onChange={(e) => setNewClient({ ...newClient, duration: 30, Amount: 1000 })} />
+                        </label>
+                    </div>
                 </div>
                 <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" type="number" id="duration" />
 
@@ -162,37 +202,94 @@ export function DisplayClients() {
                         <>
                             <button
                                 onClick={() => { saveClient(); setIsOpen(false) }}
-                                className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
-                                {editIndex === null ? "Save" : "Update"}
+                                disabled={!isFormValid()}
+                                className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Save
                             </button>
                         </> :
-                        newClient.status === "done" ?
-                            <>
-                                <button
-                                    onClick={() => { saveClient("still"); setIsOpen(false) }}
-                                    className="bg-red-400 flex-1 text-white rounded-lg py-2 hover:bg-red-500">
-                                    Uncheck
-                                </button>
-                                <button
-                                    onClick={() => { saveClient(); setIsOpen(false) }}
-                                    className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
-                                    {editIndex === null ? "Save" : "Update"}
-                                </button>
-                            </> :
+                        newClient.status === "due" ?
                             <>
                                 <button
                                     onClick={() => { saveClient("done"); setIsOpen(false) }}
-                                    className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500">
+                                    disabled={!isFormValid()}
+                                    className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                     Device returned
                                 </button>
                                 <button
                                     onClick={() => { saveClient(); setIsOpen(false) }}
-                                    className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500">
-                                    {editIndex === null ? "Save" : "Update"}
+                                    disabled={!isFormValid()}
+                                    className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Update
                                 </button>
-                            </>
+
+                            </> :
+                            newClient.status === "done" ?
+                                <>
+                                    <button
+                                        onClick={() => { saveClient("still"); setIsOpen(false) }}
+                                        disabled={!isFormValid()}
+                                        className="bg-red-400 flex-1 text-white rounded-lg py-2 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Uncheck
+                                    </button>
+                                    <button
+                                        onClick={() => { saveClient(); setIsOpen(false) }}
+                                        disabled={!isFormValid()}
+                                        className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Update
+                                    </button>
+                                </> :
+                                <>
+                                    <button
+                                        onClick={() => { saveClient("done"); setIsOpen(false) }}
+                                        disabled={!isFormValid()}
+                                        className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Device returned
+                                    </button>
+                                    <button
+                                        onClick={() => { saveClient(); setIsOpen(false) }}
+                                        disabled={!isFormValid()}
+                                        className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Update
+                                    </button>
+
+                                </>
                     }
                 </div>
+                {editIndex !== null ?
+                    newClient.status === "due" ?
+                        <>
+                            <button
+                                onClick={() => { extendClient() }}
+                                disabled={newClient.extendedDuration === null}
+                                className="bg-orange-400 flex-1 text-white rounded-lg py-2 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Extend Period For :
+                            </button>
+                            <div className="flex justify-between items-baseline">
+                                <label >Extanding Duration : ( days )</label>
+                                <div className="flex flex-col flex-1 justify-center ">
+                                    <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                                        <span>10 days</span>
+                                        <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 10}
+                                            onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 10, Bill: 250 }); }} />
+                                    </label>
+                                    <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                                        <span>20 days</span>
+
+                                        <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 20}
+                                            onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 20, Bill: 250 }); }} />
+                                    </label>
+                                    <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
+                                        <span>30 days</span>
+
+                                        <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 30}
+                                            onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 30, Bill: 250 }); }} />
+                                    </label>
+                                </div>
+                            </div>
+                        </>
+                        : ""
+                    : ""
+                }
             </div>
         </ModalClients>
 
@@ -206,7 +303,7 @@ export function DisplayClients() {
             <div className="col-span-2 flex items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Number</p>
             </div>
-            <div className="col-span-3 flex  items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-2 flex  items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Device</p>
             </div>
             <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
@@ -231,6 +328,9 @@ export function DisplayClients() {
             <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>Amount</p>
             </div>
+            <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>Bill</p>
+            </div>
             <div onClick={() => channgedisplay("status")} className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
                 {sortKey === "status"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
@@ -247,12 +347,19 @@ export function DisplayClients() {
                 return (<div key={item.name + item.number} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-2 px-1">{item.name}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.number}</p>
-                    <p className="text-sm text-gray-800 col-span-3">{item.device}</p>
+                    <p className="text-sm text-gray-800 col-span-2">{item.device}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.checkoutDate}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.duration}</p>
                     <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">    {calculateDueDate(item.checkoutDate, item.duration)}</p>
                     <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center ">{item.guaranteed.toString()}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.Amount}</p>
+                    <div className="col-span-1 flex items-start justify-center">
+                        {item.Bill === "" ? "" : <>
+                            <span className={"col-span-1 text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300"}>
+                                {item.Bill}
+                            </span>
+                        </>}
+                    </div>
                     <div className="col-span-1 flex items-start justify-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
                             {currentstatus}
@@ -261,11 +368,11 @@ export function DisplayClients() {
                     <div className="col-span-1 flex justify-end gap-2">
                         <Pencil onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
-
-                            setNewClient(item)
+                            const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration))
+                            setNewClient({ ...item, status: currentstatus })
                             setEditIndex(Index)
                             setIsOpen(true)
-                        }} className="text-indigo-500 w-4  cursor-pointer hover:text-indigo-800" />
+                        }} className="text-indigo-500 w-4 cursor-pointer hover:text-indigo-800" />
                         <X onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
 
