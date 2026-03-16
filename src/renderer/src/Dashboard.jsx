@@ -51,12 +51,12 @@ export function Dashboard() {
 
     useEffect(() => {
         window.electron.ipcRenderer.invoke('get-clients').then((clients) => {
-            setClients(clients)  // ← add this
+            setClients(clients)  
             const monthly = Array(12).fill(0)
             clients.forEach(client => {
                 if (!client.checkoutDate) return
                 const month = new Date(client.checkoutDate).getMonth()
-                monthly[month] += Number(client.Amount)
+                monthly[month] += Number(client.Amount + client.Bill)
             })
             setMonthlyData(monthly)
         })

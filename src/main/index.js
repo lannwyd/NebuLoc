@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron";
+import { app, shell, BrowserWindow, ipcMain ,Notification} from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
@@ -43,7 +43,7 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
-
+app.setName('Device Management System') 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -132,7 +132,20 @@ ipcMain.handle('update-device-status', (event, id, status) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
-
+ipcMain.handle('check-due-clients', (event, clients) => {
+    if (clients.length === 0) return
+    if (clients.length === 1) {
+        new Notification({
+            title: 'Device Overdue',
+            body: `${clients[0].name} has not returned the device yet`
+        }).show()
+    } else {
+        new Notification({
+            title: 'Devices Overdue',
+            body: `${clients.length} clients have not returned their devices`
+        }).show()
+    }
+})
 
 
 
