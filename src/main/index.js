@@ -71,6 +71,25 @@ app.whenReady().then(() => {
   if (!fs.existsSync(dataPath)) {
     fs.writeFileSync(dataPath, JSON.stringify([]))
 }
+const clients = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, 'utf-8')) : []
+    
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const dueClients = clients.filter(c => {
+        if (c.status === "done") return false
+        if (!c.checkoutDate) return false
+        const due = new Date(c.checkoutDate)
+        due.setDate(due.getDate() + Number(c.duration) + 1)
+        due.setHours(0, 0, 0, 0)
+        return today > due
+    })
+
+    if (dueClients.length === 1) {
+        new Notification({ title: 'Device Overdue', body: `${dueClients[0].name} has not returned the device yet` }).show()
+    } else if (dueClients.length > 1) {
+        new Notification({ title: 'Devices Overdue', body: `${dueClients.length} clients have not returned their devices` }).show()
+    }
 
 // read
 ipcMain.handle('get-clients', () => {
@@ -132,20 +151,6 @@ ipcMain.handle('update-device-status', (event, id, status) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
-ipcMain.handle('check-due-clients', (event, clients) => {
-    if (clients.length === 0) return
-    if (clients.length === 1) {
-        new Notification({
-            title: 'Device Overdue',
-            body: `${clients[0].name} has not returned the device yet`
-        }).show()
-    } else {
-        new Notification({
-            title: 'Devices Overdue',
-            body: `${clients.length} clients have not returned their devices`
-        }).show()
-    }
-})
 
 
 
