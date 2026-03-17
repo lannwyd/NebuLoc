@@ -1,6 +1,9 @@
 import { Plus, ChevronDown, ChevronUp, X, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
 import ModalDevices from "./ModalDevices"
+import { useLang } from './context/LanguageContext'
+import { t } from './lang/translations'
+
 
 export function Devices() {
     const [isOpen, setIsOpen] = useState(false);
@@ -8,6 +11,8 @@ export function Devices() {
     const [devices, setDevices] = useState([]);
     const [newDeviceId, setNewDeviceId] = useState("")
     const [clients, setClients] = useState([]);
+        const { lang } = useLang()
+
 
 
 
@@ -46,7 +51,7 @@ export function Devices() {
 
         <div className="grid grid-cols-2 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
             <div className="flex justify-start items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Device</p><ChevronDown size={16} />
+                <p>{t[lang].device}</p><ChevronDown size={16} />
             </div>
             <div className="flex justify-end">
                 <div onClick={() => {
@@ -54,7 +59,7 @@ export function Devices() {
                     setEditIndex(null)
                     setIsOpen(true)
                 }} className="flex items-center gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
-                    <Plus size={16} /><span>Add New</span>
+                    <Plus size={16} /><span>{t[lang].addNew}</span>
                 </div>
             </div>
         </div>
@@ -65,12 +70,12 @@ export function Devices() {
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
                     className="border border-gray-200 rounded-lg p-2 text-sm"
-                    placeholder="id number"
+                    placeholder={t[lang].idNumber}
                 />
                 <button
                     onClick={() => { saveDevice(); setIsOpen(false); }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
-                    "Save"
+                    {t[lang].save}
                 </button>
             </div>
         </ModalDevices>
@@ -83,10 +88,10 @@ export function Devices() {
                     <p className="text-sm text-gray-800 col-span-1">{device.id}</p>
                     <div className="col-span-1 flex justify-start">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${device.status === "available" ? "bg-green-100 text-green-600 shadow-green-300" : "bg-red-100 text-red-600 shadow-red-300"}`}>
-                            {device.status}
+                            {device.status === "available" ? t[lang].available : t[lang].inUse}
                         </span>
                     </div>
-                    <p className="text-sm text-gray-800 col-span-1">{getWorkingDuration(device.id)} days</p>
+                    <p className="text-sm text-gray-800 col-span-1">{getWorkingDuration(device.id)} {t[lang].days}</p>
                     <div className="col-span-1 flex justify-end gap-2">
                         <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>

@@ -21,6 +21,17 @@
     font-family: 'Bebas Neue';
     src: url('../assets/fonts/Bebas_Neue/BebasNeue-Regular.ttf');
 }
+@font-face {
+    font-family: 'Cairo';
+    src: url('../assets/fonts/Cairo/static/Cairo-Regular.ttf') format('truetype');
+    font-weight: 400;
+}
+@font-face {
+    font-family: 'Cairo';
+    src: url('../assets/fonts/Cairo/static/Cairo-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+}
+
 
 
 @layer components {
@@ -42,6 +53,10 @@
 }
 
 
+
+[dir="rtl"] {
+    font-family: 'Cairo', sans-serif !important;
+}
 
 .animate-fadeIn {
     animation: fadeIn 0.2s ease-out;

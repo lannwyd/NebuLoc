@@ -11,7 +11,8 @@ module.exports = {
             '17': 'repeat(17, minmax(0, 1fr))'
         },
         fontFamily: {
-        bebas: ['Bebas Neue', 'sans-serif'],
+    bebas: ['Bebas Neue', 'sans-serif'],
+    sans: ['Cairo', 'sans-serif'],
 }
     }
   },

@@ -1,15 +1,16 @@
 {
-  "name": "patient-tracking-system",
+  "name": "Device-tracking-system",
   "version": "1.0.0",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
   "build": {
-    "appId": "com.khalidlemeurs.patient-tracking-system",
-    "productName": "Patient Tracking System",
+    "appId": "com.khalidlemeurs.Device-tracking-system",
+    "productName": "Device Tracking System",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon" : "build/icon.ico"
     }
   },
   "scripts": {

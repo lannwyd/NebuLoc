@@ -1,6 +1,9 @@
 import { Plus, ChevronDown, ChevronUp, X, Pencil, Bell, IndentIcon, ChevronsUpDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ModalClients from "./ModalClients";
+import { useLang } from './context/LanguageContext'
+import { t } from './lang/translations'
+
 
 export function DisplayClients() {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +14,8 @@ export function DisplayClients() {
     const [sortDir, setSortDir] = useState(0)
     const [originalData, setOriginalData] = useState([]);
 
-    const notificationSent = useRef(false)
+    const { lang } = useLang()
+
 
     const [newClient, setNewClient] = useState({
         name: "", number: "", device: "", checkoutDate: "",
@@ -72,7 +76,7 @@ export function DisplayClients() {
         const client = data[index]
         await window.electron.ipcRenderer.invoke('delete-client', index)
         await window.electron.ipcRenderer.invoke('update-device-status', client.device, 'available')
-        window.electron.ipcRenderer.invoke('get-clients').then(setData)
+        window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         window.electron.ipcRenderer.invoke('get-clients').then((d) => {
             setData(d)
             setOriginalData(d)
@@ -140,6 +144,13 @@ export function DisplayClients() {
         DUE: "due",
         DONE: "done"
     }
+
+    const statusLabels = {
+    still: t[lang].still,
+    due: t[lang].due_status,
+    done: t[lang].done,
+}
+
     const statusStyles = {
         still: "bg-gray-100 text-gray-600 shadow-gray-400",
         due: "bg-red-100 text-red-600 shadow-red-300",
@@ -153,56 +164,56 @@ export function DisplayClients() {
 
 
         <div id="stats" className="w-full h-auto flex flex-row items-center justify-center">
-            <div className="card ">Devices in use : {calculateDevices()}</div>
-            <div className="card">Devices Available : {calculateAvailable()}</div>
+            <div className="card ">{t[lang].devicesInUse} {calculateDevices()}</div>
+            <div className="card">{t[lang].devicesAvailable} {calculateAvailable()}</div>
             <div className="flex justify-end mx-2 h-full">
                 <div onClick={() => {
                     setNewClient({ name: "", number: "", device: "", checkoutDate: "", duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null })
                     setEditIndex(null)
                     setIsOpen(true)
                 }} className="flex items-center  gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
-                    <Plus size={16} /><span>Add New</span>
+                    <Plus size={16} /><span>{t[lang].addNew}</span>
                 </div>
             </div>
         </div>
 
-        <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={`${editIndex === null ? "Add Cew Client" : "Update Client"}`}>
+        <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={editIndex === null ? t[lang].addNewClient : t[lang].updateClient}>
             <div className="flex flex-col gap-4">
-                <input value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Name" />
-                <input value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder="Phone number" />
+                <input value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].name} />
+                <input value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
 
                 <select value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
-                    <option value="">Select Device</option>
+                    <option value="">{t[lang].selectDevice}</option>
                     {devices.filter(d => d.status === "available").map((device, index) => (
                         <option key={index} value={device.id}>{device.id}</option>
                     ))}
                 </select>
-                <input value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Checkout Date" type="date" />
+                <input value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder={t[lang].checkoutDate} type="date" />
                 <div className="flex justify-between items-baseline">
-                    <label >Duration : ( days )</label>
+                    <label >{t[lang].duration}</label>
                     <div className="flex flex-col flex-1 justify-center ">
                         <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                            <span>10 days</span>
+                            <span>10 {t[lang].durationDays}</span>
                             <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 10} onChange={(e) => setNewClient({ ...newClient, duration: 10, Amount: 500 })} />
                         </label>
                         <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                            <span>20 days</span>
+                            <span>20 {t[lang].durationDays}</span>
 
                             <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 20} onChange={(e) => setNewClient({ ...newClient, duration: 20, Amount: 750 })} />
                         </label>
                         <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                            <span>30 days</span>
+                            <span>30 {t[lang].durationDays}</span>
 
                             <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.duration === 30} onChange={(e) => setNewClient({ ...newClient, duration: 30, Amount: 1000 })} />
                         </label>
                     </div>
                 </div>
-                <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder="Paid Amount" type="number" id="duration" />
+                <input value={newClient.Amount} onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder={t[lang].paidAmount} type="number" id="duration" />
 
 
-                <div className=" flex text-base  px-2  ">
+                <div className=" flex text-base gap-2 px-2  ">
                     <input checked={newClient.guaranteed} onChange={(e) => setNewClient({ ...newClient, guaranteed: e.target.checked })} className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="insured" />
-                    <label className=" ml-4" htmlFor="insured">did the client pay the insurance ( 2000 DA)</label>
+                    <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
                 </div>
                 <div className="flex gap-5">
                     {editIndex === null ?
@@ -211,7 +222,7 @@ export function DisplayClients() {
                                 onClick={() => { saveClient(); setIsOpen(false) }}
                                 disabled={!isFormValid()}
                                 className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Save
+                                {t[lang].save}
                             </button>
                         </> :
                         newClient.status === "due" ?
@@ -220,13 +231,13 @@ export function DisplayClients() {
                                     onClick={() => { saveClient("done"); setIsOpen(false) }}
                                     disabled={!isFormValid()}
                                     className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Device returned
+                                    {t[lang].deviceReturned}
                                 </button>
                                 <button
                                     onClick={() => { saveClient(); setIsOpen(false) }}
                                     disabled={!isFormValid()}
                                     className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Update
+                                    {t[lang].update}
                                 </button>
 
                             </> :
@@ -236,13 +247,13 @@ export function DisplayClients() {
                                         onClick={() => { saveClient("still"); setIsOpen(false) }}
                                         disabled={!isFormValid()}
                                         className="bg-red-400 flex-1 text-white rounded-lg py-2 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Uncheck
+                                        {t[lang].uncheck}
                                     </button>
                                     <button
                                         onClick={() => { saveClient(); setIsOpen(false) }}
                                         disabled={!isFormValid()}
                                         className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Update
+                                        {t[lang].update}
                                     </button>
                                 </> :
                                 <>
@@ -250,13 +261,13 @@ export function DisplayClients() {
                                         onClick={() => { saveClient("done"); setIsOpen(false) }}
                                         disabled={!isFormValid()}
                                         className="bg-green-400 flex-1 text-white rounded-lg py-2 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Device returned
+                                        {t[lang].deviceReturned}
                                     </button>
                                     <button
                                         onClick={() => { saveClient(); setIsOpen(false) }}
                                         disabled={!isFormValid()}
                                         className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                        Update
+                                        {t[lang].update}
                                     </button>
 
                                 </>
@@ -269,24 +280,24 @@ export function DisplayClients() {
                                 onClick={() => { extendClient() }}
                                 disabled={newClient.extendedDuration === null}
                                 className="bg-orange-400 flex-1 text-white rounded-lg py-2 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Extend Period For :
+                                {t[lang].extendPeriod}
                             </button>
                             <div className="flex justify-between items-baseline">
-                                <label >Extanding Duration : ( days )</label>
+                                <label >{t[lang].extendingDuration}</label>
                                 <div className="flex flex-col flex-1 justify-center ">
                                     <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                        <span>10 days</span>
+                                        <span>10 {t[lang].durationDays}</span>
                                         <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 10}
                                             onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 10, billExtended: 250 }); }} />
                                     </label>
                                     <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                        <span>20 days</span>
+                                        <span>20 {t[lang].durationDays}</span>
 
                                         <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 20}
                                             onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 20, billExtended: 500 }); }} />
                                     </label>
                                     <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                        <span>30 days</span>
+                                        <span>30 {t[lang].durationDays}</span>
 
                                         <input className="accent-indigo-400" type="radio" name="" id="" checked={newClient.extendedDuration === 30}
                                             onChange={(e) => { setNewClient({ ...newClient, extendedDuration: 30, billExtended: 750 }); }} />
@@ -302,41 +313,41 @@ export function DisplayClients() {
 
         <div style={{ gridTemplateColumns: 'repeat(17, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
             <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Name</p> {sortKey === "name"
+                <p>{t[lang].name}</p> {sortKey === "name"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
             <div className="col-span-2 flex items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Number</p>
+                <p>{t[lang].number}</p>
             </div>
             <div className="col-span-2 flex  items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Device</p>
+                <p>{t[lang].device}</p>
             </div>
             <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Checkout</p>{sortKey === "checkoutdate"
+                <p>{t[lang].checkout}</p>{sortKey === "checkoutdate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
             <div className="col-span-1 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Duration</p>
+                <p>{t[lang].duration}</p>
             </div>
             <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>Due</p>{sortKey === "duedate"
+                <p>{t[lang].due}</p>{sortKey === "duedate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
             <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Guaranteed</p>
+                <p>{t[lang].guaranteed}</p>
             </div>
 
             <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Amount</p>
+                <p>{t[lang].amount}</p>
             </div>
             <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
-                <p>Bill</p>
+                <p>{t[lang].bill}</p>
             </div>
             <div onClick={() => channgedisplay("status")} className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
                 {sortKey === "status"
@@ -369,7 +380,7 @@ export function DisplayClients() {
                     </div>
                     <div className="col-span-1 flex items-start justify-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
-                            {currentstatus}
+                            {statusLabels[currentstatus]}
                         </span>
                     </div>
                     <div className="col-span-1 flex justify-end gap-2">
