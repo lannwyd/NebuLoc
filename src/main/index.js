@@ -86,7 +86,9 @@ const clients = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, '
     })
 
     if (dueClients.length === 1) {
-        new Notification({ title: 'Device Overdue', body: `${dueClients[0].name} has not returned the device yet` }).show()
+        new Notification({ title: 'Device Overdue',
+    body: `${dueClients[0].name} has not returned the device yet`,
+    icon: join(__dirname, '../../resources/icon.png'),timeoutType: 'never', }).show()
     } else if (dueClients.length > 1) {
         new Notification({ title: 'Devices Overdue', body: `${dueClients.length} clients have not returned their devices` }).show()
     }

@@ -7,6 +7,8 @@ import { Dashboard } from "./Dashboard";
 import { useLang } from './context/LanguageContext'
 import { useState } from "react";
 import { t } from './lang/translations'
+import icon from './assets/imgs/icon.png'
+
 
 
 function Comp() {
@@ -21,7 +23,7 @@ function Comp() {
 
 
             <div className="flex flex-row items-center">
-              <Frame />
+              <img className="w-[6%]" src={icon} />
               <p className="font-medium text-xl pl-2">{t[lang].brandName}</p>
             </div>
             <button className="px-2 py-1 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={() => setLang(lang === "en" ? "ar" : "en")}>
