@@ -1,11 +1,14 @@
 import { PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { createContext, useContext, useState } from 'react';
-
+import { useLang } from './context/LanguageContext'
+import { t } from './lang/translations'
 
 
 const Sidebarcontext = createContext();
 export function Sidebar({ children }) {
     const [expanded, setexpanded] = useState(true);
+    const { lang } = useLang()
+
 
     function toggleexpanded() {
         setexpanded(prev => !prev);
@@ -16,7 +19,7 @@ export function Sidebar({ children }) {
         <>
             <div id="side-bar" className={`${expanded ? "w-[25%] lg:w-[20%]" : "w-16"}   flex flex-col bg-white rounded-xl m-2 mr-1 shadow-sm shadow-slate-500 transition-all duration-300`}>
                 <div className="p-4 flex justify-center items-center ">
-                    <p className={`${expanded ? "ml-2 w-54" : "w-0"} overflow-hidden transition-all duration-300 flex-1 font-medium text-2xl`}>Overview</p>
+                    <p className={`${expanded ? "ml-2 w-54" : "w-0"} overflow-hidden transition-all duration-300 flex-1 font-medium text-2xl`}>{t[lang].overview}</p>
                     <button className="p-1.5 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={toggleexpanded}>
                         {expanded ? <PanelLeftClose /> : <PanelRightClose />}
                     </button>

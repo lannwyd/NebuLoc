@@ -1,5 +1,5 @@
 import { Sidebar, Sidebaritems } from "./Sidebar";
-import { Boxes, List, Frame, Search, Bell, CircleUserRound } from 'lucide-react';
+import { Boxes, List, Search, CircleUserRound, Info } from 'lucide-react';
 import { DisplayClients } from "./DisplayClients";
 import { Devices } from "./Devices";
 import { Availability } from "./Availability";
@@ -26,9 +26,40 @@ function Comp() {
               <img className="w-[6%]" src={icon} />
               <p className="font-medium text-xl pl-2">{t[lang].brandName}</p>
             </div>
-            <button className="px-2 py-1 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={() => setLang(lang === "en" ? "ar" : "en")}>
-              {lang === "en" ? "العربية" : "English"}
-            </button>
+            <div className="flex flex-row items-center justify-center gap-2">
+              <button className="px-2 py-1 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={() => setLang(lang === "en" ? "ar" : "en")}>
+                {lang === "en" ? "العربية" : "English"}
+              </button>
+              <div className="relative group">
+                <Info className="cursor-pointer text-slate-400 hover:text-slate-600" />
+                <div className={`absolute top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl p-4 shadow-lg z-50
+                opacity-0 scale-95 pointer-events-none
+                group-hover:opacity-100 group-hover:scale-100
+                transition-all duration-200 ${lang === 'ar' ? 'left-0 origin-top-left' : 'right-0 origin-top-right'}`}>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm">
+                        {t[lang].amount}
+                      </span>
+                      <span className="text-sm px-2 py-0.5  ">
+                        250
+                      </span>
+                      <p className="text-sm text-gray-600">{t[lang].amountInfo}</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm ">
+                        {t[lang].bill}
+                      </span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-400 shrink-0 mt-0.5">
+                        250
+                      </span>
+                      <p className="text-sm text-gray-600">{t[lang].billInfo}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
 
 
 
@@ -37,7 +68,7 @@ function Comp() {
         <div className="flex flex-1 overflow-hidden  ">
 
           <Sidebar>
-            <Sidebaritems icon={<List />} text = {t[lang].clients} active={activePage === "clients"} onClick={() => setactivePage("clients")} />
+            <Sidebaritems icon={<List />} text={t[lang].clients} active={activePage === "clients"} onClick={() => setactivePage("clients")} />
             <Sidebaritems icon={<Boxes />} text={t[lang].devices} active={activePage === "devices"} onClick={() => setactivePage("devices")} />
             <Sidebaritems icon={<Search />} text={t[lang].availability} active={activePage === "availability"} onClick={() => setactivePage("availability")} />
             <Sidebaritems icon={<CircleUserRound />} text={t[lang].dashboard} active={activePage === "dashboard"} onClick={() => setactivePage("dashboard")} />

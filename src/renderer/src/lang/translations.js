@@ -1,5 +1,6 @@
 export const t = {
     en: {
+    overview : "Overview",
     clients: "Clients",
     devices: "Devices",
     availability: "Availability",
@@ -51,8 +52,20 @@ export const t = {
     still: "still",
     due_status: "due",
     done: "returned",
+    status:"Status",
+    observation:"Observation",
+    durationEnter:"Enter Duration Manually",
+    PayLater:"Pay later",
+    PayNow:"Pay now",
+    amountInfo: "Money paid immediately by the client when receiving the device",
+    billInfo: "Deferred amount the client will pay when returning the device",
+    observationText:"Observation (optional)",
+    presets:"use presets",
+    address : "Adress"
+
     },
     ar: {
+    overview:"نظرة عامة",
     clients: "العملاء",
     devices: "الأجهزة",
     availability: "التوفر",
@@ -66,7 +79,7 @@ export const t = {
     willBe: "سيكون",
     days: "أيام",
     available: "متاح",
-    totalMoney: "إجمالي الأرباح",
+    totalMoney: "إجمالي الدخل",
     money: "المال",
     months: ["جان", "فيف", "مار", "أفر", "ماي", "جوان", "جويل", "أوت", "سبت", "أكت", "نوف", "ديس"],
     total: "المجموع",
@@ -87,7 +100,7 @@ export const t = {
     checkout: "تاريخ الاستعارة",
     duration: "المدة",
     due: "تاريخ الاستلام",
-    guaranteed: "التأمين",
+    guaranteed: "الضمان",
     amount: "المبلغ",
     bill: "الفاتورة",
     selectDevice: "اختر الجهاز",
@@ -104,5 +117,15 @@ export const t = {
     still: "جارٍ",
     due_status: "متأخر",
     done: "مسترجع",
+    status:"الحالة",
+    observation:"ملاحظة",
+    durationEnter:"ادخل المدة يدويا",
+    PayNow:"يدفع الان",
+    PayLater:"يدفع لاحقا",
+    amountInfo: "المبلغ الذي دفعه العميل فوراً عند استلام الجهاز",
+    billInfo: "المبلغ المؤجل الذي سيدفعه العميل عند إرجاع الجهاز",
+    observationText:"ملاحظة ( اختيارية )",
+    presets:"استعمل الاختصارات",
+    address : "العنوان"
     }
 }

@@ -49,9 +49,15 @@ export function Devices() {
     return (<>
 
 
-        <div className="grid grid-cols-2 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
-            <div className="flex justify-start items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
-                <p>{t[lang].device}</p><ChevronDown size={16} />
+        <div className="grid grid-cols-4 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
+            <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>{t[lang].device}</p>
+            </div>
+            <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>{t[lang].status}</p>
+            </div>
+            <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>{t[lang].usedFor}</p>
             </div>
             <div className="flex justify-end">
                 <div onClick={() => {
