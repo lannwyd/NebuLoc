@@ -11,7 +11,7 @@ export function Devices() {
     const [devices, setDevices] = useState([]);
     const [newDeviceId, setNewDeviceId] = useState("")
     const [clients, setClients] = useState([]);
-        const { lang } = useLang()
+    const { lang } = useLang()
 
 
 
@@ -21,7 +21,20 @@ export function Devices() {
         window.electron.ipcRenderer.invoke('get-clients').then(setClients)
 
     }, [])
+    useEffect(() => {
+        if (isOpen) {
+            setTimeout(() => {
+                document.getElementById('device')?.focus()
+            }, 150)
+        }
+    }, [isOpen])
 
+    function handleEnter(e) {
+        if (e.key === "Enter") {
+            saveDevice()
+            setIsOpen(false)
+        }
+    }
     async function saveDevice() {
         await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available", workingDuration: 0 })
 
@@ -73,10 +86,12 @@ export function Devices() {
         <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New device">
             <div className="flex flex-col gap-4">
                 <input
+                    onKeyDown={(e) => handleEnter(e)}
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
                     className="border border-gray-200 rounded-lg p-2 text-sm"
                     placeholder={t[lang].idNumber}
+                    id="device"
                 />
                 <button
                     onClick={() => { saveDevice(); setIsOpen(false); }}

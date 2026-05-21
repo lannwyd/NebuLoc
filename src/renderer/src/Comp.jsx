@@ -1,5 +1,5 @@
 import { Sidebar, Sidebaritems } from "./Sidebar";
-import { Boxes, List, Search, CircleUserRound, Info } from 'lucide-react';
+import { Boxes, List, Search, CircleUserRound, Info ,BookmarkCheck} from 'lucide-react';
 import { DisplayClients } from "./DisplayClients";
 import { Devices } from "./Devices";
 import { Availability } from "./Availability";
@@ -8,12 +8,13 @@ import { useLang } from './context/LanguageContext'
 import { useState } from "react";
 import { t } from './lang/translations'
 import icon from './assets/imgs/icon.png'
+import { Reservations } from "./Reservations";
 
 
 
 function Comp() {
 
-  const [activePage, setactivePage] = useState("clients");
+  const [activePage, setactivePage] = useState("Reservations");
   const { lang, setLang } = useLang();
   return (
     <>
@@ -71,11 +72,12 @@ function Comp() {
             <Sidebaritems icon={<List />} text={t[lang].clients} active={activePage === "clients"} onClick={() => setactivePage("clients")} />
             <Sidebaritems icon={<Boxes />} text={t[lang].devices} active={activePage === "devices"} onClick={() => setactivePage("devices")} />
             <Sidebaritems icon={<Search />} text={t[lang].availability} active={activePage === "availability"} onClick={() => setactivePage("availability")} />
+            <Sidebaritems icon={<BookmarkCheck />} text={t[lang].reservations} active={activePage === "reservations"} onClick={() => setactivePage("reservations")} />
             <Sidebaritems icon={<CircleUserRound />} text={t[lang].dashboard} active={activePage === "dashboard"} onClick={() => setactivePage("dashboard")} />
           </Sidebar>
           <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
             <div key={activePage} className="flex flex-col flex-1 animate-fadeIn">
-              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> : activePage === "availability" ? <Availability /> : activePage === "dashboard" ? <Dashboard /> : ""}
+              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> : activePage === "availability" ? <Availability /> : activePage === "dashboard" ? <Dashboard /> : activePage === "Reservations" ? <Reservations /> : ""}
 
             </div>
           </div>

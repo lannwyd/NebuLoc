@@ -200,8 +200,8 @@ export function DisplayClients() {
                 <div className="flex flex-col gap-4">
                     <input onKeyDown={(e) => handleEnter(e, 'number')}
                         autoFocus id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].name} />
-                    <input onKeyDown={(e) => handleEnter(e, 'device-select')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
-                    <input onKeyDown={(e) => handleEnter(e, 'address')}
+                    <input onKeyDown={(e) => handleEnter(e, 'address')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
+                    <input onKeyDown={(e) => handleEnter(e, 'device-select')}
                         id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].address} />
 
                     <select onKeyDown={(e) => handleEnter(e, 'checkout')} id="device-select" value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">

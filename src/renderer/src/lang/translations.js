@@ -61,7 +61,8 @@ export const t = {
     billInfo: "Deferred amount the client will pay when returning the device",
     observationText:"Observation (optional)",
     presets:"use presets",
-    address : "Adress"
+    address : "Address",
+    reservations:"reservations"
 
     },
     ar: {
@@ -126,6 +127,7 @@ export const t = {
     billInfo: "المبلغ المؤجل الذي سيدفعه العميل عند إرجاع الجهاز",
     observationText:"ملاحظة ( اختيارية )",
     presets:"استعمل الاختصارات",
-    address : "العنوان"
+    address : "العنوان",
+    reservations:"الحجوزات"
     }
 }
