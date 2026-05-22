@@ -1,5 +1,5 @@
 import { Sidebar, Sidebaritems } from "./Sidebar";
-import { Boxes, List, Search, CircleUserRound, Info ,BookmarkCheck} from 'lucide-react';
+import { Boxes, List, Search, CircleUserRound, Info, BookmarkCheck } from 'lucide-react';
 import { DisplayClients } from "./DisplayClients";
 import { Devices } from "./Devices";
 import { Availability } from "./Availability";
@@ -14,7 +14,7 @@ import { Reservations } from "./Reservations";
 
 function Comp() {
 
-  const [activePage, setactivePage] = useState("Reservations");
+  const [activePage, setactivePage] = useState("clients");
   const { lang, setLang } = useLang();
   return (
     <>
@@ -77,7 +77,7 @@ function Comp() {
           </Sidebar>
           <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
             <div key={activePage} className="flex flex-col flex-1 animate-fadeIn">
-              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> : activePage === "availability" ? <Availability /> : activePage === "dashboard" ? <Dashboard /> : activePage === "Reservations" ? <Reservations /> : ""}
+              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> : activePage === "availability" ? <Availability /> : activePage === "dashboard" ? <Dashboard /> : activePage === "reservations" ? <Reservations /> : ""}
 
             </div>
           </div>

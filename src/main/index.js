@@ -153,6 +153,28 @@ ipcMain.handle('update-device-status', (event, id, status) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
+const reservationsPath = path.join(app.getPath('userData'), 'reservations.json');
+
+if (!fs.existsSync(reservationsPath)) {
+    fs.writeFileSync(reservationsPath, JSON.stringify([]))
+}
+
+ipcMain.handle('get-reservations', () => {
+    return JSON.parse(fs.readFileSync(reservationsPath, 'utf-8'))
+})
+
+ipcMain.handle('add-reservation', (event, newReservation) => {
+    const reservations = JSON.parse(fs.readFileSync(reservationsPath, 'utf-8'))
+    reservations.push(newReservation)
+    fs.writeFileSync(reservationsPath, JSON.stringify(reservations))
+})
+
+ipcMain.handle('delete-reservation', (event, index) => {
+    const reservations = JSON.parse(fs.readFileSync(reservationsPath, 'utf-8'))
+    reservations.splice(index, 1)
+    fs.writeFileSync(reservationsPath, JSON.stringify(reservations))
+})
+
 
 
 

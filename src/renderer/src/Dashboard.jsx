@@ -3,6 +3,9 @@ import { Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement
 import { useEffect, useState } from 'react'
 import { useLang } from './context/LanguageContext'
 import { t } from './lang/translations'
+import { CircleDollarSign } from "lucide-react";
+
+
 
 ChartJS.register(Filler, LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend)  // Filler is here ✓
 
@@ -68,14 +71,28 @@ export function Dashboard() {
 
     return (
         <>
-            <div className="mx-2 mt-4 bg-white rounded-lg p-4 ">
-                <div className="mx-2 mt-4 bg-gray-100 rounded-lg p-4">
-                    <Line data={data} options={options} />
+            <div className='grid h-full grid-cols-2 rounded-lg grid-rows-2 bg-slate-200'>
+                <div></div>
+                <div className="  flex flex-col bg-white justify-center items-center">
+                    <div className='flex flex-col '>
+                        <p className='text-xl font-sans font-medium'>{t[lang].totalMoney} : </p>
+                    </div>
+                    <div className='flex flex-row justify-center items-center text-indigo-500 font-[900] text-5xl'>
+                        <CircleDollarSign className='text-indigo-500' size={60} />
+                        <p className=''>{calculateMoney()} DA</p>
+                    </div>
+
+
                 </div>
-                <div className="mx-2 mt-4 bg-gray-100 rounded-lg p-4 ">
-                    <p className='text-xl font-sans font-medium'>{t[lang].totalMoney} : {calculateMoney()} DA</p>
+                <div className="">
+                    <div className="  bg-gray-100 rounded-lg ">
+                        <Line data={data} options={options} />
+                    </div>
                 </div>
+                <div></div>
+
             </div>
+
         </>
     );
 }
