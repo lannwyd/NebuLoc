@@ -62,8 +62,13 @@ export const t = {
     observationText:"Observation (optional)",
     presets:"use presets",
     address : "Address",
-    reservations:"reservations"
-
+    reservations:"reservations",
+    activeClients: "Active",
+    overdueClients: "Overdue",
+    noOverdue: "No overdue clients",
+    daysOverdue: "days overdue",
+    totalClients: "Total Clients",
+    totalDevices: "Total Devices"
     },
     ar: {
     overview:"نظرة عامة",
@@ -128,6 +133,12 @@ export const t = {
     observationText:"ملاحظة ( اختيارية )",
     presets:"استعمل الاختصارات",
     address : "العنوان",
-    reservations:"الحجوزات"
+    reservations:"الحجوزات",
+    activeClients: "نشطون",
+    overdueClients: "متأخرون",
+    noOverdue: "لا يوجد عملاء متأخرون",
+    daysOverdue: "أيام متأخرة",
+    totalClients: "إجمالي العملاء",
+    totalDevices: "إجمالي الأجهزة"
     }
 }
