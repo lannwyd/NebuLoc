@@ -31,6 +31,7 @@ export function Devices() {
 
     function handleEnter(e) {
         if (e.key === "Enter") {
+            if (newDeviceId.trim() === "") return
             saveDevice()
             setIsOpen(false)
         }
@@ -89,12 +90,16 @@ export function Devices() {
                     onKeyDown={(e) => handleEnter(e)}
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
-                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                    className={`border rounded-lg p-2 text-sm ${newDeviceId.trim() === "" ? "border-red-300" : "border-gray-200"}`}
                     placeholder={t[lang].idNumber}
                     id="device"
                 />
                 <button
-                    onClick={() => { saveDevice(); setIsOpen(false); }}
+                    onClick={() => {
+                        if (newDeviceId.trim() === "") return
+                        saveDevice()
+                        setIsOpen(false)
+                    }}
                     className="bg-indigo-400 text-white rounded-lg py-2 hover:bg-indigo-500">
                     {t[lang].save}
                 </button>

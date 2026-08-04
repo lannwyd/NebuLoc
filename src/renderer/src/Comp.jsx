@@ -24,8 +24,8 @@ function Comp() {
 
 
             <div className="flex flex-row items-center">
-              <img className="w-[6%]" src={icon} />
-              <p className="font-medium text-xl pl-2">{t[lang].brandName}</p>
+              <img className="w-[5%]" src={icon} />
+              <p className="font-medium text-xl">{t[lang].brandName}</p>
             </div>
             <div className="flex flex-row items-center justify-center gap-2">
               <button className="px-2 py-1 rounded-lg bg-indigo-200 hover:bg-indigo-400" onClick={() => setLang(lang === "en" ? "ar" : "en")}>
