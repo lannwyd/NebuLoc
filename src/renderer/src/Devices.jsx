@@ -12,6 +12,7 @@ export function Devices() {
     const [newDeviceId, setNewDeviceId] = useState("")
     const [clients, setClients] = useState([]);
     const { lang } = useLang()
+    const [newDeviceNotes, setNewDeviceNotes] = useState("")
 
 
 
@@ -37,8 +38,7 @@ export function Devices() {
         }
     }
     async function saveDevice() {
-        await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available", workingDuration: 0 })
-
+        await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available", workingDuration: 0, notes: newDeviceNotes })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
     }
@@ -93,6 +93,13 @@ export function Devices() {
                     className={`border rounded-lg p-2 text-sm ${newDeviceId.trim() === "" ? "border-red-300" : "border-gray-200"}`}
                     placeholder={t[lang].idNumber}
                     id="device"
+                />
+                <textarea
+                    value={newDeviceNotes}
+                    onChange={(e) => setNewDeviceNotes(e.target.value)}
+                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                    placeholder="Condition notes"
+                    rows={3}
                 />
                 <button
                     onClick={() => {

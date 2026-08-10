@@ -13,16 +13,19 @@ export function DisplayClients() {
     const [sortKey, setSortKey] = useState(null)
     const [sortDir, setSortDir] = useState(0)
     const [durationMode, setDurationMode] = useState("radio")
+    const [extendDurationMode, setExtendDurationMode] = useState("radio")
     const [paymentMode, setPaymentMode] = useState("immediate")
     const [originalData, setOriginalData] = useState([]);
     const [extendPaymentMode, setExtendPaymentMode] = useState("immediate")
     const { lang } = useLang()
 
-
-    const [newClient, setNewClient] = useState({
+    const emptyClient = {
         name: "", number: "", device: "", address: "", checkoutDate: "",
-        duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null, observation: null,
-    })
+        duration: null, guaranteed: "", Amount: "", Bill: "", status: "still",
+        extendedDuration: null, observation: null, called: false,
+    }
+
+    const [newClient, setNewClient] = useState(emptyClient)
 
     useEffect(() => {
         window.electron.ipcRenderer.invoke('get-clients').then((d) => {
@@ -31,6 +34,7 @@ export function DisplayClients() {
         })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
     }, [])
+
     useEffect(() => {
         function handleF10(e) {
             if (e.key === 'F10' && isOpen) {
@@ -43,6 +47,7 @@ export function DisplayClients() {
         window.addEventListener('keydown', handleF10)
         return () => window.removeEventListener('keydown', handleF10)
     }, [isOpen, newClient])
+
     useEffect(() => {
         if (isOpen) {
             setTimeout(() => {
@@ -54,7 +59,7 @@ export function DisplayClients() {
     useEffect(() => {
         function handleGlobalEnter(e) {
             if (e.key === 'Enter' && !isOpen) {
-                setNewClient({ name: "", number: "", device: "", address: "", checkoutDate: "", duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null, observation: null })
+                setNewClient(emptyClient)
                 setEditIndex(null)
                 setPaymentMode("immediate")
                 setIsOpen(true)
@@ -69,7 +74,6 @@ export function DisplayClients() {
             document.getElementById(nextId)?.focus()
         }
     }
-
 
     function isFormValid() {
         return newClient.name !== "" &&
@@ -133,8 +137,8 @@ export function DisplayClients() {
             setSortKey(basedOn)
             setSortDir(1)
         }
-
     }
+
     const displayData = sortKey === null ? originalData : [...data].sort((a, b) => {
         switch (sortKey) {
             case "name": return a.name.localeCompare(b.name) * sortDir
@@ -167,8 +171,18 @@ export function DisplayClients() {
         if (!checkoutDate) return "N/A"
         const date = new Date(checkoutDate)
         if (isNaN(date.getTime())) return "N/A"
-        date.setDate(date.getDate() + Number(duration) + 1)
+        date.setDate(date.getDate() + Number(duration))
         return date.toISOString().split('T')[0]
+    }
+
+    function getLateInfo(dueDate) {
+        if (dueDate === "N/A") return { days: 0, bill: 0 }
+        const due = new Date(dueDate)
+        due.setHours(0, 0, 0, 0)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const daysLate = Math.floor((today - due) / (1000 * 60 * 60 * 24))
+        return daysLate > 0 ? { days: daysLate, bill: daysLate * 70 } : { days: 0, bill: 0 }
     }
 
     function calculateDevices() {
@@ -177,6 +191,12 @@ export function DisplayClients() {
             return status !== "done"
         }).length
     }
+
+    function calculateAmount(duration) {
+        const rate = duration >= 30 ? 50 : 70
+        return duration * rate
+    }
+
     function calculateAvailable() {
         return devices.filter(d => d.status === "available").length
     }
@@ -198,19 +218,19 @@ export function DisplayClients() {
         due: "bg-red-100 text-red-600 shadow-red-300",
         done: "bg-green-100 text-green-600 shadow-green-300",
     }
+
     function handleSave() {
         onClose();
     }
 
     return (<>
 
-
         <div id="stats" className="w-full h-auto flex flex-row items-center justify-center">
             <div className="card ">{t[lang].devicesInUse} {calculateDevices()}</div>
             <div className="card">{t[lang].devicesAvailable} {calculateAvailable()}</div>
             <div className="flex justify-end mx-2 h-full">
                 <div onClick={() => {
-                    setNewClient({ name: "", number: "", device: "", address: "", checkoutDate: "", duration: null, guaranteed: false, Amount: "", Bill: "", status: "still", extendedDuration: null, observation: null })
+                    setNewClient(emptyClient)
                     setEditIndex(null)
                     setPaymentMode("immediate")
                     setIsOpen(true)
@@ -253,26 +273,24 @@ export function DisplayClients() {
                                 <span>10 {t[lang].durationDays}</span>
                                 <input id="duration" className="accent-indigo-400" type="radio" onKeyDown={(e) => handleEnter(e, 'amount')} name="duration" checked={newClient.duration === 10} onChange={(e) => setNewClient({
                                     ...newClient, duration: 10,
-                                    Amount: paymentMode === "immediate" ? 500 : "",
-                                    Bill: paymentMode === "bill" ? 500 : ""
+                                    Amount: paymentMode === "immediate" ? calculateAmount(10) : "",
+                                    Bill: paymentMode === "bill" ? calculateAmount(10) : ""
                                 })} />
                             </label>
                             <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
                                 <span>20 {t[lang].durationDays}</span>
-
                                 <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 20} onChange={(e) => setNewClient({
                                     ...newClient, duration: 20,
-                                    Amount: paymentMode === "immediate" ? 750 : "",
-                                    Bill: paymentMode === "bill" ? 750 : ""
+                                    Amount: paymentMode === "immediate" ? calculateAmount(20) : "",
+                                    Bill: paymentMode === "bill" ? calculateAmount(20) : ""
                                 })} />
                             </label>
                             <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
                                 <span>30 {t[lang].durationDays}</span>
-
                                 <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 30} onChange={(e) => setNewClient({
                                     ...newClient, duration: 30,
-                                    Amount: paymentMode === "immediate" ? 1000 : "",
-                                    Bill: paymentMode === "bill" ? 1000 : ""
+                                    Amount: paymentMode === "immediate" ? calculateAmount(30) : "",
+                                    Bill: paymentMode === "bill" ? calculateAmount(30) : ""
                                 })} />
                             </label>
                         </div>
@@ -280,9 +298,16 @@ export function DisplayClients() {
                         <input
                             type="number"
                             min="1"
-                            onKeyDown={(e) => handleEnter(e, 'amount')}
                             value={newClient.duration || ""}
-                            onChange={(e) => setNewClient({ ...newClient, duration: Number(e.target.value) })}
+                            onChange={(e) => {
+                                const days = Number(e.target.value)
+                                setNewClient({
+                                    ...newClient,
+                                    duration: days,
+                                    Amount: paymentMode === "immediate" ? calculateAmount(days) : "",
+                                    Bill: paymentMode === "bill" ? calculateAmount(days) : ""
+                                })
+                            }}
                             className="border border-gray-200 rounded-lg p-2 text-sm"
                             placeholder="Number of days"
                         />
@@ -294,22 +319,18 @@ export function DisplayClients() {
                             <button
                                 onClick={() => {
                                     setPaymentMode("immediate")
-                                    if (newClient.duration) setNewClient({ ...newClient, Amount: newClient.duration === 10 ? 500 : newClient.duration === 20 ? 750 : 1000, Bill: "" })
-
+                                    if (newClient.duration) setNewClient({ ...newClient, Amount: calculateAmount(newClient.duration), Bill: "" })
                                 }}
                                 disabled={editIndex !== null}
-
                                 className={`flex-1 py-2 text-sm transition-colors ${paymentMode === "immediate" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                                 {t[lang].PayNow}
                             </button>
                             <button
                                 onClick={() => {
                                     setPaymentMode("bill")
-                                    if (newClient.duration) setNewClient({ ...newClient, Bill: newClient.duration === 10 ? 500 : newClient.duration === 20 ? 750 : 1000, Amount: "" })
-
+                                    if (newClient.duration) setNewClient({ ...newClient, Bill: calculateAmount(newClient.duration), Amount: "" })
                                 }}
                                 disabled={editIndex !== null}
-
                                 className={`flex-1 py-2 text-sm transition-colors ${paymentMode === "bill" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                                 {t[lang].PayLater}
                             </button>
@@ -348,20 +369,31 @@ export function DisplayClients() {
                         className="border border-gray-200 rounded-lg p-2 text-sm"
                         placeholder={`${t[lang].observationText}`}
                     />
-                    <div className=" flex text-base gap-2 px-2  ">
+                    <div className=" flex text-base gap-2  items-center justify-between">
+                        <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
                         <input
+                            value={newClient.guaranteed || ""}
+                            onChange={(e) => setNewClient({ ...newClient, guaranteed: e.target.value })}
+                            className="border border-gray-200 rounded-lg p-2 text-sm"
+                            placeholder="0"
+                            type="number"
+                            id="insured"
+                        />
+                    </div>
+                    <hr className="border-t border-gray-400 " />
+
+                    <div className="flex text-base gap-2 px-2 items-center">
+                        <input
+                            checked={newClient.called}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     e.preventDefault()
-                                    setNewClient({ ...newClient, guaranteed: !newClient.guaranteed })
+                                    setNewClient({ ...newClient, called: !newClient.called })
                                 }
                             }}
-                            checked={newClient.guaranteed}
-                            onChange={(e) => setNewClient({ ...newClient, guaranteed: e.target.checked })}
-                            className="scale-150 cursor-pointer accent-indigo-400"
-                            type="checkbox"
-                            id="insured"
-                        />                        <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
+                            onChange={(e) => setNewClient({ ...newClient, called: e.target.checked })}
+                            className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="called" />
+                        <label className="ml-4" htmlFor="called">Called client</label>
                     </div>
                 </div>
             </div>
@@ -390,7 +422,6 @@ export function DisplayClients() {
                                 className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                 {t[lang].update}
                             </button>
-
                         </> :
                         newClient.status === "done" ?
                             <>
@@ -420,7 +451,6 @@ export function DisplayClients() {
                                     className="bg-indigo-400 flex-1 text-white rounded-lg py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                     {t[lang].update}
                                 </button>
-
                             </>
                 }
             </div>
@@ -448,60 +478,83 @@ export function DisplayClients() {
                                 </button>
                             </div>
 
-                            <div className="flex justify-center items-center">
+                            <div className="flex justify-between items-center">
                                 <label>{t[lang].extendingDuration}</label>
-                                <div className="flex flex-row flex-1 gap-14 justify-center ">
+                                <button
+                                    onClick={() => setExtendDurationMode(extendDurationMode === "radio" ? "number" : "radio")}
+                                    className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
+                                    {extendDurationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
+                                </button>
+                            </div>
 
+                            {extendDurationMode === "radio" ? (
+                                <div className="flex flex-row flex-1 gap-14 justify-center ">
                                     <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" id="" checked={newClient.extendedDuration === 10}
+                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 10}
                                             onChange={(e) => {
                                                 setNewClient({
                                                     ...newClient,
                                                     extendedDuration: 10,
-                                                    billExtended: extendPaymentMode === "bill" ? 250 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 250 : 0
+                                                    billExtended: extendPaymentMode === "bill" ? 10 * 70 : 0,
+                                                    amountExtended: extendPaymentMode === "immediate" ? 10 * 70 : 0
                                                 });
                                             }} />
                                         <span>10 {t[lang].durationDays}</span>
                                     </label>
 
                                     <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" id="" checked={newClient.extendedDuration === 20}
+                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 20}
                                             onChange={(e) => {
                                                 setNewClient({
                                                     ...newClient,
                                                     extendedDuration: 20,
-                                                    billExtended: extendPaymentMode === "bill" ? 500 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 500 : 0
+                                                    billExtended: extendPaymentMode === "bill" ? 20 * 70 : 0,
+                                                    amountExtended: extendPaymentMode === "immediate" ? 20 * 70 : 0
                                                 });
                                             }} />
                                         <span>20 {t[lang].durationDays}</span>
                                     </label>
 
                                     <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" id="" checked={newClient.extendedDuration === 30}
+                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 30}
                                             onChange={(e) => {
                                                 setNewClient({
                                                     ...newClient,
                                                     extendedDuration: 30,
-                                                    billExtended: extendPaymentMode === "bill" ? 750 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 750 : 0
+                                                    billExtended: extendPaymentMode === "bill" ? 30 * 70 : 0,
+                                                    amountExtended: extendPaymentMode === "immediate" ? 30 * 70 : 0
                                                 });
                                             }} />
                                         <span>30 {t[lang].durationDays}</span>
                                     </label>
                                 </div>
-                            </div>
+                            ) : (
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={newClient.extendedDuration || ""}
+                                    onChange={(e) => {
+                                        const days = Number(e.target.value)
+                                        setNewClient({
+                                            ...newClient,
+                                            extendedDuration: days,
+                                            billExtended: extendPaymentMode === "bill" ? days * 70 : 0,
+                                            amountExtended: extendPaymentMode === "immediate" ? days * 70 : 0
+                                        })
+                                    }}
+                                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                                    placeholder="Number of days"
+                                />
+                            )}
                         </>
                         : ""
                     : ""
                 }
             </div>
 
-
         </ModalClients>
 
-        <div style={{ gridTemplateColumns: 'repeat(17, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
+        <div style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
             <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].name}</p> {sortKey === "name"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
@@ -530,9 +583,14 @@ export function DisplayClients() {
                 }
             </div>
             <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>Late</p>
+            </div>
+            <div className="col-span-1 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>Called</p>
+            </div>
+            <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].guaranteed}</p>
             </div>
-
             <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].amount}</p>
             </div>
@@ -550,16 +608,28 @@ export function DisplayClients() {
 
         <div className="flex flex-col mx-2 mt-1">
             {displayData.map((item) => {
-                const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration));
+                const dueDateStr = calculateDueDate(item.checkoutDate, item.duration)
+                const currentstatus = item.status === "done" ? "done" : getStatus(dueDateStr);
+                const lateInfo = getLateInfo(dueDateStr)
 
-                return (<div key={item.name + item.number} className="grid grid-cols-17 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                return (<div key={item.name + item.number} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-2 px-1">{item.name}</p>
                     <p className="text-sm text-gray-800 col-span-2">{item.number}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start  justify-center">{item.device}</p>
                     <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">{item.checkoutDate}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.duration}</p>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">    {calculateDueDate(item.checkoutDate, item.duration)}</p>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center ">{item.guaranteed ? <Check className="text-green-400" /> : <X className="text-indigo-400" />}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">    {dueDateStr}</p>
+                    <div className="col-span-2 flex items-start justify-center">
+                        {currentstatus === "due" && lateInfo.days > 0 ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
+                                {lateInfo.days}d / {lateInfo.bill} DA
+                            </span>
+                        ) : "-"}
+                    </div>
+                    <div className="col-span-1 flex items-start justify-center">
+                        {item.called ? <Check className="text-green-400" size={18} /> : <X className="text-red-400" size={18} />}
+                    </div>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">{item.guaranteed || "-"}</p>
                     <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.Amount}</p>
                     <div className="col-span-1 flex items-start justify-center">
                         {item.Bill === "" ? "" : <>
@@ -573,7 +643,7 @@ export function DisplayClients() {
                             {statusLabels[currentstatus]}
                         </span>
                     </div>
-                    <div className="col-span-2 flex justify-end gap-2">
+                    <div className="col-span-1 flex justify-end gap-2">
                         {item.observation && (
                             <div className="relative group">
                                 <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
@@ -586,6 +656,7 @@ export function DisplayClients() {
                                 </div>
                             </div>
                         )}
+
                         <Pencil onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
                             const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration))
@@ -593,19 +664,17 @@ export function DisplayClients() {
                             setPaymentMode(item.Bill !== "" ? "bill" : "immediate")
                             setEditIndex(Index)
                             setIsOpen(true)
-                        }} className="text-indigo-500 w-4 cursor-pointer hover:text-indigo-800" />
+                        }} className="text-indigo-500 min-w-4  cursor-pointer hover:text-indigo-800" />
 
                         <Trash2 onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
-
                             deleteClient(Index);
-                        }} className="text-red-400  cursor-pointer hover:text-red-700 w-[20px]" />
+                        }} className="text-red-400 min-w-4 cursor-pointer hover:text-red-700 " />
                     </div>
                 </div>
                 )
             })}
         </div>
-
 
     </>);
 }

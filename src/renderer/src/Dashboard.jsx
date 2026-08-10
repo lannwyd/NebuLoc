@@ -17,7 +17,7 @@ export function Dashboard() {
         if (!checkoutDate) return null
         const date = new Date(checkoutDate)
         if (isNaN(date.getTime())) return null
-        date.setDate(date.getDate() + Number(duration) + 1)
+        date.setDate(date.getDate() + Number(duration))
         return date
     }
 

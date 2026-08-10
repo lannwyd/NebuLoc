@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: patient-tracking-system
+productName: NebuLoc
 directories:
   buildResources: build
 files:

@@ -20,7 +20,7 @@ function Comp() {
     <>
       <main className=" h-screen w-full flex flex-col font-sans bg-slate-300">
         <header className="  h-10  bg-white rounded-xl mx-2 mt-2 shadow-sm shadow-slate-500">
-          <div className="w-full h-full flex flex-row justify-between items-center px-5">
+          <div className="w-full h-full flex flex-row justify-between items-center px-3">
 
 
             <div className="flex flex-row items-center">
