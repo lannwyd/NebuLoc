@@ -555,49 +555,49 @@ export function DisplayClients() {
         </ModalClients>
 
         <div style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
-            <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].name}</p> {sortKey === "name"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-2 flex items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-2 flex items-center justify-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].number}</p>
             </div>
-            <div className="col-span-1 flex  items-center  gap-1 text-sm font-semibold text-gray-600  justify-center">
+            <div className="col-span-1 flex items-center justify-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].device}</p>
             </div>
-            <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center cursor-pointer gap-1 text-sm font-semibold text-gray-600 justify-center">
+            <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].checkout}</p>{sortKey === "checkoutdate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-1 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].duration}</p>
             </div>
-            <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].due}</p>{sortKey === "duedate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-2 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>Late</p>
             </div>
-            <div className="col-span-1 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>Called</p>
             </div>
-            <div className="col-span-2 flex justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-2 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].guaranteed}</p>
             </div>
-            <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].amount}</p>
             </div>
-            <div className="col-span-1 flex  justify-center items-center  gap-1 text-sm font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].bill}</p>
             </div>
-            <div onClick={() => channgedisplay("status")} className="col-span-1 flex  items-center justify-center cursor-pointer  text-sm font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("status")} className="col-span-1 flex items-center justify-center cursor-pointer text-xs font-semibold text-gray-600">
                 {sortKey === "status"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
@@ -612,38 +612,38 @@ export function DisplayClients() {
                 const currentstatus = item.status === "done" ? "done" : getStatus(dueDateStr);
                 const lateInfo = getLateInfo(dueDateStr)
 
-                return (<div key={item.name + item.number} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <p className="text-sm text-gray-800 col-span-2 px-1">{item.name}</p>
-                    <p className="text-sm text-gray-800 col-span-2">{item.number}</p>
-                    <p className="text-sm text-gray-800 col-span-1 flex items-start  justify-center">{item.device}</p>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">{item.checkoutDate}</p>
-                    <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.duration}</p>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">    {dueDateStr}</p>
-                    <div className="col-span-2 flex items-start justify-center">
+                return (<div key={item.name + item.number} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
+                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
+                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
+                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center break-keep  ">{item.device}</p>
+                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{item.checkoutDate}</p>
+                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.duration}</p>
+                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{dueDateStr}</p>
+                    <div className="col-span-2 flex items-center justify-center  ">
                         {currentstatus === "due" && lateInfo.days > 0 ? (
                             <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
                                 {lateInfo.days}d / {lateInfo.bill} DA
                             </span>
                         ) : "-"}
                     </div>
-                    <div className="col-span-1 flex items-start justify-center">
+                    <div className="col-span-1 flex items-center justify-center  ">
                         {item.called ? <Check className="text-green-400" size={18} /> : <X className="text-red-400" size={18} />}
                     </div>
-                    <p className="text-sm text-gray-800 col-span-2 flex items-start justify-center">{item.guaranteed || "-"}</p>
-                    <p className="text-sm text-gray-800 col-span-1 flex items-start justify-center">{item.Amount}</p>
-                    <div className="col-span-1 flex items-start justify-center">
+                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
+                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
+                    <div className="col-span-1 flex items-center justify-center  ">
                         {item.Bill === "" ? "" : <>
-                            <span className={"col-span-1 text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300"}>
+                            <span className={"text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300"}>
                                 {item.Bill}
                             </span>
                         </>}
                     </div>
-                    <div className="col-span-1 flex items-start justify-center">
+                    <div className="col-span-1 flex items-center justify-center  ">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
                             {statusLabels[currentstatus]}
                         </span>
                     </div>
-                    <div className="col-span-1 flex justify-end gap-2">
+                    <div className="col-span-1 flex items-center justify-center gap-2  ">
                         {item.observation && (
                             <div className="relative group">
                                 <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
@@ -652,7 +652,7 @@ export function DisplayClients() {
                                 group-hover:opacity-100 group-hover:scale-100
                                 transition-all duration-200 ${lang === 'ar' ? 'left-0 origin-bottom-left' : 'right-0 origin-bottom-right'}`}>
                                     <p className="text-xs font-semibold text-gray-400 mb-1">{t[lang].observation}</p>
-                                    <p className="text-sm text-gray-800 break-words">{item.observation}</p>
+                                    <p className="text-xs text-gray-800 break-words">{item.observation}</p>
                                 </div>
                             </div>
                         )}
@@ -664,7 +664,7 @@ export function DisplayClients() {
                             setPaymentMode(item.Bill !== "" ? "bill" : "immediate")
                             setEditIndex(Index)
                             setIsOpen(true)
-                        }} className="text-indigo-500 min-w-4  cursor-pointer hover:text-indigo-800" />
+                        }} className="text-indigo-500 min-w-4 cursor-pointer hover:text-indigo-800" />
 
                         <Trash2 onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
