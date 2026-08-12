@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2 ,Minus} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ModalClients from "./ModalClients";
 import { useLang } from './context/LanguageContext'
@@ -582,17 +582,16 @@ export function DisplayClients() {
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-2 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
-                <p>Late</p>
-            </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
-                <p>Called</p>
-            </div>
+
+
             <div className="col-span-2 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].guaranteed}</p>
             </div>
             <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].amount}</p>
+            </div>
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+                <p>{t[lang].late}</p>
             </div>
             <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
                 <p>{t[lang].bill}</p>
@@ -603,7 +602,10 @@ export function DisplayClients() {
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-1" />
+            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+                <p>{t[lang].Called}</p>
+            </div>
+            <div className="col-span-2" />
         </div>
 
         <div className="flex flex-col mx-2 mt-1">
@@ -619,32 +621,34 @@ export function DisplayClients() {
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{item.checkoutDate}</p>
                     <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.duration}</p>
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{dueDateStr}</p>
-                    <div className="col-span-2 flex items-center justify-center  ">
-                        {currentstatus === "due" && lateInfo.days > 0 ? (
-                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
-                                {lateInfo.days}d / {lateInfo.bill} DA
-                            </span>
-                        ) : "-"}
-                    </div>
-                    <div className="col-span-1 flex items-center justify-center  ">
-                        {item.called ? <Check className="text-green-400" size={18} /> : <X className="text-red-400" size={18} />}
-                    </div>
+
+
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
                     <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
                     <div className="col-span-1 flex items-center justify-center  ">
-                        {item.Bill === "" ? "" : <>
-                            <span className={"text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300"}>
-                                {item.Bill}
+                        {currentstatus === "due" && lateInfo.days > 0 ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
+                                {lateInfo.days}d
                             </span>
-                        </>}
+                        ) : "-"}
+                    </div>
+                    <div className="col-span-1 flex items-center justify-center">
+                        {(Number(item.Bill || 0) + lateInfo.bill) > 0 ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300">
+                                {Number(item.Bill || 0) + lateInfo.bill}
+                            </span>
+                        ) : ""}
                     </div>
                     <div className="col-span-1 flex items-center justify-center  ">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
                             {statusLabels[currentstatus]}
                         </span>
                     </div>
-                    <div className="col-span-1 flex items-center justify-center gap-2  ">
-                        {item.observation && (
+                    <div className="col-span-1 flex items-center justify-center  ">
+                        {item.called ? <Check className="text-green-400" size={18} /> : <X className="text-red-400" size={18} />}
+                    </div>
+                    <div className="col-span-2 flex items-center justify-center gap-2  ">
+                        {item.observation ? (
                             <div className="relative group">
                                 <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
                                 <div className={`absolute bottom-full mb-2 w-48 bg-slate-100 border border-gray-600 rounded-xl p-3 shadow-lg z-10
@@ -655,7 +659,7 @@ export function DisplayClients() {
                                     <p className="text-xs text-gray-800 break-words">{item.observation}</p>
                                 </div>
                             </div>
-                        )}
+                        ) : <Minus className="text-slate-500"/> }
 
                         <Pencil onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
@@ -664,12 +668,12 @@ export function DisplayClients() {
                             setPaymentMode(item.Bill !== "" ? "bill" : "immediate")
                             setEditIndex(Index)
                             setIsOpen(true)
-                        }} className="text-indigo-500 min-w-4 cursor-pointer hover:text-indigo-800" />
+                        }} className="text-indigo-500 min-w-[1.3rem] w-[1.3rem] cursor-pointer hover:text-indigo-800" />
 
                         <Trash2 onClick={() => {
                             const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
                             deleteClient(Index);
-                        }} className="text-red-400 min-w-4 cursor-pointer hover:text-red-700 " />
+                        }} className="text-red-400 min-w-5 w-5 cursor-pointer hover:text-red-700 " />
                     </div>
                 </div>
                 )

@@ -68,7 +68,9 @@ export const t = {
     noOverdue: "No overdue clients",
     daysOverdue: "days overdue",
     totalClients: "Total Clients",
-    totalDevices: "Total Devices"
+    totalDevices: "Total Devices",
+    called:"called",
+    late:"late"
     },
     ar: {
     overview:"نظرة عامة",
@@ -139,6 +141,8 @@ export const t = {
     noOverdue: "لا يوجد عملاء متأخرون",
     daysOverdue: "أيام متأخرة",
     totalClients: "إجمالي العملاء",
-    totalDevices: "إجمالي الأجهزة"
+    totalDevices: "إجمالي الأجهزة",
+    called:"الإتصال",
+    late:"التأخر"
     }
 }
