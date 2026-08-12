@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Pencil,Eye ,Minus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Pencil, Eye, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
 import ModalDevices from "./ModalDevices"
 import { useLang } from './context/LanguageContext'
@@ -87,7 +87,12 @@ export function Devices() {
         <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New device">
             <div className="flex flex-col gap-4">
                 <input
-                    onKeyDown={(e) => handleEnter(e)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault()
+                            document.getElementById('notes')?.focus()
+                        }
+                    }}
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
                     className={`border rounded-lg p-2 text-sm ${newDeviceId.trim() === "" ? "border-red-300" : "border-gray-200"}`}
@@ -95,6 +100,15 @@ export function Devices() {
                     id="device"
                 />
                 <textarea
+                    id="notes"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault()
+                            if (newDeviceId.trim() === "") return
+                            saveDevice()
+                            setIsOpen(false)
+                        }
+                    }}
                     value={newDeviceNotes}
                     onChange={(e) => setNewDeviceNotes(e.target.value)}
                     className="border border-gray-200 rounded-lg p-2 text-sm"
@@ -116,7 +130,7 @@ export function Devices() {
 
 
         <div className="flex flex-col mx-2 mt-1">
-            {devices.map((device, index) => (
+            {[...devices].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })).map((device, index) => (
                 <div key={index} className="grid grid-cols-5 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-1">{device.id}</p>
                     <div className="col-span-1 flex justify-start">
@@ -125,7 +139,7 @@ export function Devices() {
                         </span>
                     </div>
                     <p className="text-sm text-gray-800 col-span-1">{getWorkingDuration(device.id)} {t[lang].days}</p>
-                    {device.notes ?   (
+                    {device.notes ? (
                         <div className="relative group">
                             <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
                             <div className={`absolute bottom-full mb-2 w-48 bg-slate-100 border border-gray-600 rounded-xl p-3 shadow-lg z-10
@@ -136,7 +150,7 @@ export function Devices() {
                                 <p className="text-xs text-gray-800 break-words">{device.notes}</p>
                             </div>
                         </div>
-                    ) : <Minus className="text-slate-500"/> }
+                    ) : <Minus className="text-slate-500" />}
                     <div className="col-span-1 flex justify-end gap-2">
                         <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>

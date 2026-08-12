@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2 ,Minus} from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2, Minus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ModalClients from "./ModalClients";
 import { useLang } from './context/LanguageContext'
@@ -75,12 +75,23 @@ export function DisplayClients() {
         }
     }
 
+    // Bug #1 fix: locate a client by its unique id when available, falling back
+    // to name+number only for older records that predate the id field.
+    function findClientIndex(item) {
+        if (item.id !== undefined && item.id !== null) {
+            const idIndex = data.findIndex(d => d.id === item.id)
+            if (idIndex !== -1) return idIndex
+        }
+        return data.findIndex(d => d.name === item.name && d.number === item.number)
+    }
+
     function isFormValid() {
         return newClient.name !== "" &&
             newClient.number !== "" &&
             newClient.device !== "" &&
             newClient.checkoutDate !== "" &&
             newClient.duration !== null &&
+            newClient.duration > 0 && // Bug #4 fix: 0 or negative duration no longer passes validation
             (newClient.Amount !== "" || newClient.Bill !== "")
     }
 
@@ -96,9 +107,12 @@ export function DisplayClients() {
     }
 
     async function saveClient(statusOverride = null) {
-        const clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
+        let clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
 
         if (editIndex === null) {
+            // Bug #1 fix: assign a unique id at creation time so future edits/deletes
+            // never rely solely on name+number, which can collide.
+            clientToSave = { ...clientToSave, id: clientToSave.id ?? Date.now() }
             await window.electron.ipcRenderer.invoke('add-client', clientToSave)
             await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
         } else {
@@ -249,11 +263,15 @@ export function DisplayClients() {
                     <input onKeyDown={(e) => handleEnter(e, 'device-select')}
                         id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].address} />
 
+                    {/* Bug #2 fix: also include the client's own currently-assigned device,
+                        even though it's "in-use", so the dropdown doesn't render blank while editing. */}
                     <select onKeyDown={(e) => handleEnter(e, 'checkout')} id="device-select" value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
                         <option value="">{t[lang].selectDevice}</option>
-                        {devices.filter(d => d.status === "available").map((device, index) => (
-                            <option key={index} value={device.id}>{device.id}</option>
-                        ))}
+                        {devices
+                            .filter(d => d.status === "available" || d.id === newClient.device)
+                            .map((device, index) => (
+                                <option key={index} value={device.id}>{device.id}</option>
+                            ))}
                     </select>
                     <input lang="en-GB" onKeyDown={(e) => handleEnter(e, 'duration')} id="checkout" value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder={t[lang].checkoutDate} type="date" />
                 </div>
@@ -300,12 +318,14 @@ export function DisplayClients() {
                             min="1"
                             value={newClient.duration || ""}
                             onChange={(e) => {
-                                const days = Number(e.target.value)
+                                // Bug #3/#4 fix: empty stays null (fails validation), negative/zero clamp to 1
+                                const raw = e.target.value
+                                const days = raw === "" ? null : Math.max(1, Number(raw))
                                 setNewClient({
                                     ...newClient,
                                     duration: days,
-                                    Amount: paymentMode === "immediate" ? calculateAmount(days) : "",
-                                    Bill: paymentMode === "bill" ? calculateAmount(days) : ""
+                                    Amount: paymentMode === "immediate" && days ? calculateAmount(days) : "",
+                                    Bill: paymentMode === "bill" && days ? calculateAmount(days) : ""
                                 })
                             }}
                             className="border border-gray-200 rounded-lg p-2 text-sm"
@@ -341,20 +361,30 @@ export function DisplayClients() {
                                 id="amount"
                                 value={newClient.Amount}
                                 onKeyDown={(e) => handleEnter(e, 'observation')}
-                                onChange={(e) => setNewClient({ ...newClient, Amount: e.target.value, Bill: "" })}
+                                onChange={(e) => {
+                                    // Bug #3 fix: no negative amounts
+                                    const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                    setNewClient({ ...newClient, Amount: val, Bill: "" })
+                                }}
                                 className="border border-gray-200 rounded-lg p-2 text-sm"
                                 placeholder={t[lang].paidAmount}
                                 type="number"
+                                min="0"
                             />
                         ) : (
                             <input
                                 id="amount"
                                 value={newClient.Bill}
                                 onKeyDown={(e) => handleEnter(e, 'observation')}
-                                onChange={(e) => setNewClient({ ...newClient, Bill: e.target.value, Amount: "" })}
+                                onChange={(e) => {
+                                    // Bug #3 fix: no negative bills
+                                    const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                    setNewClient({ ...newClient, Bill: val, Amount: "" })
+                                }}
                                 className="border border-gray-200 rounded-lg p-2 text-sm"
                                 placeholder={t[lang].bill}
                                 type="number"
+                                min="0"
                             />
                         )}
                     </div>
@@ -373,10 +403,15 @@ export function DisplayClients() {
                         <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
                         <input
                             value={newClient.guaranteed || ""}
-                            onChange={(e) => setNewClient({ ...newClient, guaranteed: e.target.value })}
+                            onChange={(e) => {
+                                // Bug #3 fix: no negative insurance amounts
+                                const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                setNewClient({ ...newClient, guaranteed: val })
+                            }}
                             className="border border-gray-200 rounded-lg p-2 text-sm"
                             placeholder="0"
                             type="number"
+                            min="0"
                             id="insured"
                         />
                     </div>
@@ -460,7 +495,7 @@ export function DisplayClients() {
                         <>
                             <button
                                 onClick={() => { extendClient() }}
-                                disabled={newClient.extendedDuration === null}
+                                disabled={!newClient.extendedDuration || newClient.extendedDuration <= 0}
                                 className="bg-orange-400 flex-1 text-white rounded-lg py-2 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                 {t[lang].extendPeriod}
                             </button>
@@ -534,12 +569,14 @@ export function DisplayClients() {
                                     min="1"
                                     value={newClient.extendedDuration || ""}
                                     onChange={(e) => {
-                                        const days = Number(e.target.value)
+                                        // Bug #3 fix: negative/zero extension days no longer possible
+                                        const raw = e.target.value
+                                        const days = raw === "" ? null : Math.max(1, Number(raw))
                                         setNewClient({
                                             ...newClient,
                                             extendedDuration: days,
-                                            billExtended: extendPaymentMode === "bill" ? days * 70 : 0,
-                                            amountExtended: extendPaymentMode === "immediate" ? days * 70 : 0
+                                            billExtended: extendPaymentMode === "bill" && days ? days * 70 : 0,
+                                            amountExtended: extendPaymentMode === "immediate" && days ? days * 70 : 0
                                         })
                                     }}
                                     className="border border-gray-200 rounded-lg p-2 text-sm"
@@ -614,7 +651,7 @@ export function DisplayClients() {
                 const currentstatus = item.status === "done" ? "done" : getStatus(dueDateStr);
                 const lateInfo = getLateInfo(dueDateStr)
 
-                return (<div key={item.name + item.number} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
+                return (<div key={item.id ?? (item.name + item.number)} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
                     <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center break-keep  ">{item.device}</p>
@@ -659,10 +696,10 @@ export function DisplayClients() {
                                     <p className="text-xs text-gray-800 break-words">{item.observation}</p>
                                 </div>
                             </div>
-                        ) : <Minus className="text-slate-500"/> }
+                        ) : <Minus className="text-slate-500" />}
 
                         <Pencil onClick={() => {
-                            const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
+                            const Index = findClientIndex(item)
                             const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration))
                             setNewClient({ ...item, status: currentstatus })
                             setPaymentMode(item.Bill !== "" ? "bill" : "immediate")
@@ -671,7 +708,7 @@ export function DisplayClients() {
                         }} className="text-indigo-500 min-w-[1.3rem] w-[1.3rem] cursor-pointer hover:text-indigo-800" />
 
                         <Trash2 onClick={() => {
-                            const Index = data.findIndex(d => d.name === item.name && d.number === item.number)
+                            const Index = findClientIndex(item)
                             deleteClient(Index);
                         }} className="text-red-400 min-w-5 w-5 cursor-pointer hover:text-red-700 " />
                     </div>
