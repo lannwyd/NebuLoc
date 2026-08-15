@@ -70,7 +70,11 @@ export const t = {
     totalClients: "Total Clients",
     totalDevices: "Total Devices",
     called:"called",
-    late:"late"
+    late:"late",
+    unlock:"Enter",
+    enterPassword:"Enter the password",
+    wrongPassword : "The password is wrong"
+
     },
     ar: {
     overview:"نظرة عامة",
@@ -143,6 +147,9 @@ export const t = {
     totalClients: "إجمالي العملاء",
     totalDevices: "إجمالي الأجهزة",
     called:"الإتصال",
-    late:"التأخر"
+    late:"التأخر",
+    unlock:"ادخل",
+    enterPassword:"ادخل الرقم السري",
+    wrongPassword : "الرقم الذي ادخلته خاطئ"
     }
 }

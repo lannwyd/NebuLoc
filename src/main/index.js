@@ -5,6 +5,9 @@ import icon from "../../resources/icon.png?asset";
 import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
+import 'dotenv/config'
+
+
 
 const dataPath = path.join(app.getPath('userData'), 'clients.json');
 const devicesPath = path.join(app.getPath('userData'), 'devices.json');
@@ -92,6 +95,10 @@ const clients = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, '
     } else if (dueClients.length > 1) {
         new Notification({ title: 'Devices Overdue', body: `${dueClients.length} clients have not returned their devices` }).show()
     }
+
+    ipcMain.handle('get-dashboard-password', () => {
+    return process.env.DASHBOARD_PASSWORD;
+});
 
 // read
 ipcMain.handle('get-clients', () => {

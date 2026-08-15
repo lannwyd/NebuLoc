@@ -9,10 +9,12 @@ import { useState } from "react";
 import { t } from './lang/translations'
 import icon from './assets/imgs/icon.png'
 import { Reservations } from "./Reservations";
+import { PasswordGate } from "./PasswordGate";
 
 
 
 function Comp() {
+
 
   const [activePage, setactivePage] = useState("clients");
   const { lang, setLang } = useLang();
@@ -77,7 +79,11 @@ function Comp() {
           </Sidebar>
           <div id="display" className="flex flex-col flex-1 overflow-y-auto py-4 px-3 m-2 ml-1 bg-white shadow-sm shadow-slate-500 rounded-2xl">
             <div key={activePage} className="flex flex-col flex-1 animate-fadeIn">
-              {activePage === "clients" ? <DisplayClients /> : activePage === "devices" ? <Devices /> : activePage === "availability" ? <Availability /> : activePage === "dashboard" ? <Dashboard /> : activePage === "reservations" ? <Reservations /> : ""}
+              {activePage === "clients" ? <DisplayClients /> :
+                activePage === "devices" ? <Devices /> :
+                  activePage === "availability" ? <Availability /> :
+                    activePage === "dashboard" ? <PasswordGate><Dashboard /></PasswordGate> :
+                      activePage === "reservations" ? <Reservations /> : ""}
 
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2, Minus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Phone, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2, Minus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ModalClients from "./ModalClients";
 import { useLang } from './context/LanguageContext'
@@ -75,8 +75,6 @@ export function DisplayClients() {
         }
     }
 
-    // Bug #1 fix: locate a client by its unique id when available, falling back
-    // to name+number only for older records that predate the id field.
     function findClientIndex(item) {
         if (item.id !== undefined && item.id !== null) {
             const idIndex = data.findIndex(d => d.id === item.id)
@@ -91,7 +89,7 @@ export function DisplayClients() {
             newClient.device !== "" &&
             newClient.checkoutDate !== "" &&
             newClient.duration !== null &&
-            newClient.duration > 0 && // Bug #4 fix: 0 or negative duration no longer passes validation
+            newClient.duration > 0 &&
             (newClient.Amount !== "" || newClient.Bill !== "")
     }
 
@@ -108,15 +106,19 @@ export function DisplayClients() {
 
     async function saveClient(statusOverride = null) {
         let clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
+        const previousDevice = editIndex !== null ? data[editIndex]?.device : null;
 
         if (editIndex === null) {
-            // Bug #1 fix: assign a unique id at creation time so future edits/deletes
-            // never rely solely on name+number, which can collide.
             clientToSave = { ...clientToSave, id: clientToSave.id ?? Date.now() }
             await window.electron.ipcRenderer.invoke('add-client', clientToSave)
             await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
         } else {
             await window.electron.ipcRenderer.invoke('update-client', editIndex, clientToSave)
+
+            if (previousDevice && previousDevice !== clientToSave.device) {
+                await window.electron.ipcRenderer.invoke('update-device-status', previousDevice, 'available')
+            }
+
             if (clientToSave.status === "done") {
                 await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'available')
             } else {
@@ -129,6 +131,20 @@ export function DisplayClients() {
         })
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
+    }
+
+    async function payOffBill() {
+        const settled = {
+            ...newClient,
+            Amount: Number(newClient.Amount || 0) + Number(newClient.Bill || 0),
+            Bill: 0,
+        }
+        await window.electron.ipcRenderer.invoke('update-client', editIndex, settled)
+        setNewClient(settled)
+        window.electron.ipcRenderer.invoke('get-clients').then((d) => {
+            setData(d)
+            setOriginalData(d)
+        })
     }
 
     async function deleteClient(index) {
@@ -158,7 +174,11 @@ export function DisplayClients() {
             case "name": return a.name.localeCompare(b.name) * sortDir
             case "checkoutdate": return (new Date(a.checkoutDate) - new Date(b.checkoutDate)) * sortDir
             case "duedate": return (new Date(calculateDueDate(a.checkoutDate, a.duration)) - new Date(calculateDueDate(b.checkoutDate, b.duration))) * sortDir
-            case "status": return a.status.localeCompare(b.status) * sortDir
+            case "status": {
+                const statusA = a.status === "done" ? "done" : getStatus(calculateDueDate(a.checkoutDate, a.duration))
+                const statusB = b.status === "done" ? "done" : getStatus(calculateDueDate(b.checkoutDate, b.duration))
+                return statusA.localeCompare(statusB) * sortDir
+            }
         }
     })
 
@@ -256,15 +276,13 @@ export function DisplayClients() {
 
         <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={editIndex === null ? t[lang].addNewClient : t[lang].updateClient}>
             <div className="grid gap-4" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-                <div className="flex flex-col gap-8">
-                    <input onKeyDown={(e) => handleEnter(e, 'number')}
+                <div className="flex flex-col gap-7">
+                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'number')}
                         autoFocus id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].name} />
-                    <input onKeyDown={(e) => handleEnter(e, 'address')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
-                    <input onKeyDown={(e) => handleEnter(e, 'device-select')}
+                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'address')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
+                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'device-select')}
                         id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].address} />
 
-                    {/* Bug #2 fix: also include the client's own currently-assigned device,
-                        even though it's "in-use", so the dropdown doesn't render blank while editing. */}
                     <select onKeyDown={(e) => handleEnter(e, 'checkout')} id="device-select" value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
                         <option value="">{t[lang].selectDevice}</option>
                         {devices
@@ -274,67 +292,70 @@ export function DisplayClients() {
                             ))}
                     </select>
                     <input lang="en-GB" onKeyDown={(e) => handleEnter(e, 'duration')} id="checkout" value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder={t[lang].checkoutDate} type="date" />
+
                 </div>
+
                 <div className="w-px bg-gray-200 mx-2 self-stretch" />
                 <div className="flex flex-col gap-4 ">
-                    <div className="flex justify-between items-center">
-                        <label>{t[lang].duration}</label>
-                        <button
-                            onClick={() => setDurationMode(durationMode === "radio" ? "number" : "radio")}
-                            className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
-                            {durationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
-                        </button>
-                    </div>
-                    {durationMode === "radio" ? (
-                        <div className="flex flex-col flex-1 justify-center">
-                            <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                <span>10 {t[lang].durationDays}</span>
-                                <input id="duration" className="accent-indigo-400" type="radio" onKeyDown={(e) => handleEnter(e, 'amount')} name="duration" checked={newClient.duration === 10} onChange={(e) => setNewClient({
-                                    ...newClient, duration: 10,
-                                    Amount: paymentMode === "immediate" ? calculateAmount(10) : "",
-                                    Bill: paymentMode === "bill" ? calculateAmount(10) : ""
-                                })} />
-                            </label>
-                            <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                <span>20 {t[lang].durationDays}</span>
-                                <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 20} onChange={(e) => setNewClient({
-                                    ...newClient, duration: 20,
-                                    Amount: paymentMode === "immediate" ? calculateAmount(20) : "",
-                                    Bill: paymentMode === "bill" ? calculateAmount(20) : ""
-                                })} />
-                            </label>
-                            <label className="flex flex-row gap-10 justify-center items-center cursor-pointer">
-                                <span>30 {t[lang].durationDays}</span>
-                                <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 30} onChange={(e) => setNewClient({
-                                    ...newClient, duration: 30,
-                                    Amount: paymentMode === "immediate" ? calculateAmount(30) : "",
-                                    Bill: paymentMode === "bill" ? calculateAmount(30) : ""
-                                })} />
-                            </label>
-                        </div>
-                    ) : (
-                        <input
-                            type="number"
-                            min="1"
-                            value={newClient.duration || ""}
-                            onChange={(e) => {
-                                // Bug #3/#4 fix: empty stays null (fails validation), negative/zero clamp to 1
-                                const raw = e.target.value
-                                const days = raw === "" ? null : Math.max(1, Number(raw))
-                                setNewClient({
-                                    ...newClient,
-                                    duration: days,
-                                    Amount: paymentMode === "immediate" && days ? calculateAmount(days) : "",
-                                    Bill: paymentMode === "bill" && days ? calculateAmount(days) : ""
-                                })
-                            }}
-                            className="border border-gray-200 rounded-lg p-2 text-sm"
-                            placeholder="Number of days"
-                        />
-                    )}
-                    <hr className="border-t border-gray-400 " />
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-center">
+                            <label>{t[lang].duration}</label>
+                            <button
+                                onClick={() => setDurationMode(durationMode === "radio" ? "number" : "radio")}
+                                className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
+                                {durationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
+                            </button>
+                        </div>
+                        {durationMode === "radio" ? (
+                            <div className="flex flex-row flex-1 text-s justify-between ">
+                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                    <input id="duration" className="accent-indigo-400" type="radio" onKeyDown={(e) => handleEnter(e, 'amount')} name="duration" checked={newClient.duration === 10} onChange={(e) => setNewClient({
+                                        ...newClient, duration: 10,
+                                        Amount: paymentMode === "immediate" ? calculateAmount(10) : "",
+                                        Bill: paymentMode === "bill" ? calculateAmount(10) : ""
+                                    })} />
+                                    <span>10 {t[lang].durationDays}</span>
+
+                                </label>
+                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                    <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 20} onChange={(e) => setNewClient({
+                                        ...newClient, duration: 20,
+                                        Amount: paymentMode === "immediate" ? calculateAmount(20) : "",
+                                        Bill: paymentMode === "bill" ? calculateAmount(20) : ""
+                                    })} />
+                                    <span>20 {t[lang].durationDays}</span>
+
+                                </label>
+                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                    <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 30} onChange={(e) => setNewClient({
+                                        ...newClient, duration: 30,
+                                        Amount: paymentMode === "immediate" ? calculateAmount(30) : "",
+                                        Bill: paymentMode === "bill" ? calculateAmount(30) : ""
+                                    })} />
+                                    <span>30 {t[lang].durationDays}</span>
+
+                                </label>
+                            </div>
+                        ) : (
+                            <input
+                                type="number"
+                                min="1"
+                                value={newClient.duration || ""}
+                                onChange={(e) => {
+                                    const raw = e.target.value
+                                    const days = raw === "" ? null : Math.max(1, Number(raw))
+                                    setNewClient({
+                                        ...newClient,
+                                        duration: days,
+                                        Amount: paymentMode === "immediate" && days ? calculateAmount(days) : "",
+                                        Bill: paymentMode === "bill" && days ? calculateAmount(days) : ""
+                                    })
+                                }}
+                                className="border border-gray-200 rounded-lg p-2 text-sm"
+                                placeholder="Number of days"
+                            />
+                        )}
                         <div className="flex rounded-lg overflow-hidden border border-gray-200">
                             <button
                                 onClick={() => {
@@ -362,7 +383,6 @@ export function DisplayClients() {
                                 value={newClient.Amount}
                                 onKeyDown={(e) => handleEnter(e, 'observation')}
                                 onChange={(e) => {
-                                    // Bug #3 fix: no negative amounts
                                     const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
                                     setNewClient({ ...newClient, Amount: val, Bill: "" })
                                 }}
@@ -377,7 +397,6 @@ export function DisplayClients() {
                                 value={newClient.Bill}
                                 onKeyDown={(e) => handleEnter(e, 'observation')}
                                 onChange={(e) => {
-                                    // Bug #3 fix: no negative bills
                                     const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
                                     setNewClient({ ...newClient, Bill: val, Amount: "" })
                                 }}
@@ -403,8 +422,8 @@ export function DisplayClients() {
                         <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
                         <input
                             value={newClient.guaranteed || ""}
+                            onKeyDown={(e) => handleEnter(e, 'called')}
                             onChange={(e) => {
-                                // Bug #3 fix: no negative insurance amounts
                                 const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
                                 setNewClient({ ...newClient, guaranteed: val })
                             }}
@@ -428,7 +447,7 @@ export function DisplayClients() {
                             }}
                             onChange={(e) => setNewClient({ ...newClient, called: e.target.checked })}
                             className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="called" />
-                        <label className="ml-4" htmlFor="called">Called client</label>
+                        <label className="ml-4 flex flex-row items-center gap-2" htmlFor="called"><Phone size={20} strokeWidth={2.5} className="text-indigo-500" />Called client</label>
                     </div>
                 </div>
             </div>
@@ -490,6 +509,13 @@ export function DisplayClients() {
                 }
             </div>
             <div className="flex flex-col gap-5 mt-5">
+                {editIndex !== null && Number(newClient.Bill || 0) > 0 && (
+                    <button
+                        onClick={payOffBill}
+                        className="bg-blue-400 flex-1 text-white rounded-lg py-2 hover:bg-blue-500">
+                        Pay off bill ({newClient.Bill} DA)
+                    </button>
+                )}
                 {editIndex !== null ?
                     newClient.status === "due" ?
                         <>
@@ -499,15 +525,32 @@ export function DisplayClients() {
                                 className="bg-orange-400 flex-1 text-white rounded-lg py-2 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
                                 {t[lang].extendPeriod}
                             </button>
-
                             <div className="flex rounded-lg overflow-hidden border border-gray-200">
                                 <button
-                                    onClick={() => setExtendPaymentMode("immediate")}
+                                    onClick={() => {
+                                        setExtendPaymentMode("immediate")
+                                        if (newClient.extendedDuration) {
+                                            setNewClient({
+                                                ...newClient,
+                                                billExtended: 0,
+                                                amountExtended: newClient.extendedDuration * 70
+                                            })
+                                        }
+                                    }}
                                     className={`flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "immediate" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                                     {t[lang].PayNow}
                                 </button>
                                 <button
-                                    onClick={() => setExtendPaymentMode("bill")}
+                                    onClick={() => {
+                                        setExtendPaymentMode("bill")
+                                        if (newClient.extendedDuration) {
+                                            setNewClient({
+                                                ...newClient,
+                                                billExtended: newClient.extendedDuration * 70,
+                                                amountExtended: 0
+                                            })
+                                        }
+                                    }}
                                     className={`flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "bill" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                                     {t[lang].PayLater}
                                 </button>
@@ -569,7 +612,6 @@ export function DisplayClients() {
                                     min="1"
                                     value={newClient.extendedDuration || ""}
                                     onChange={(e) => {
-                                        // Bug #3 fix: negative/zero extension days no longer possible
                                         const raw = e.target.value
                                         const days = raw === "" ? null : Math.max(1, Number(raw))
                                         setNewClient({
@@ -640,7 +682,7 @@ export function DisplayClients() {
                 }
             </div>
             <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
-                <p>{t[lang].Called}</p>
+                <p>{t[lang].called}</p>
             </div>
             <div className="col-span-2" />
         </div>
@@ -653,7 +695,7 @@ export function DisplayClients() {
 
                 return (<div key={item.id ?? (item.name + item.number)} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
-                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
+                    <p dir="ltr" className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
                     <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center break-keep  ">{item.device}</p>
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{item.checkoutDate}</p>
                     <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.duration}</p>
@@ -661,7 +703,7 @@ export function DisplayClients() {
 
 
                     <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
-                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
+                    <p dir="ltr" className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
                     <div className="col-span-1 flex items-center justify-center  ">
                         {currentstatus === "due" && lateInfo.days > 0 ? (
                             <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
@@ -669,7 +711,7 @@ export function DisplayClients() {
                             </span>
                         ) : "-"}
                     </div>
-                    <div className="col-span-1 flex items-center justify-center">
+                    <div dir="ltr" className="col-span-1 flex items-center justify-center">
                         {(Number(item.Bill || 0) + lateInfo.bill) > 0 ? (
                             <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300">
                                 {Number(item.Bill || 0) + lateInfo.bill}
@@ -702,7 +744,7 @@ export function DisplayClients() {
                             const Index = findClientIndex(item)
                             const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration))
                             setNewClient({ ...item, status: currentstatus })
-                            setPaymentMode(item.Bill !== "" ? "bill" : "immediate")
+                            setPaymentMode(Number(item.Bill || 0) > 0 ? "bill" : "immediate")
                             setEditIndex(Index)
                             setIsOpen(true)
                         }} className="text-indigo-500 min-w-[1.3rem] w-[1.3rem] cursor-pointer hover:text-indigo-800" />
