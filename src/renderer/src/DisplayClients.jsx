@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, ChevronUp, X, Phone, Pencil, IndentIcon, ChevronsUpDown, Eye, Check, Trash2, Minus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, X, Phone, Pencil, IndentIcon, SendHorizontal, ChevronsUpDown, Eye, Check, Trash2, Minus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ModalClients from "./ModalClients";
 import { useLang } from './context/LanguageContext'
@@ -276,86 +276,106 @@ export function DisplayClients() {
 
         <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={editIndex === null ? t[lang].addNewClient : t[lang].updateClient}>
             <div className="grid gap-4" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
-                <div className="flex flex-col gap-7">
-                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'number')}
-                        autoFocus id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].name} />
-                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'address')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].number} />
-                    <input  dir="ltr" onKeyDown={(e) => handleEnter(e, 'device-select')}
-                        id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm" placeholder={t[lang].address} />
-
-                    <select onKeyDown={(e) => handleEnter(e, 'checkout')} id="device-select" value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-2 text-sm text-gray-600">
-                        <option value="">{t[lang].selectDevice}</option>
-                        {devices
-                            .filter(d => d.status === "available" || d.id === newClient.device)
-                            .map((device, index) => (
-                                <option key={index} value={device.id}>{device.id}</option>
-                            ))}
-                    </select>
-                    <input lang="en-GB" onKeyDown={(e) => handleEnter(e, 'duration')} id="checkout" value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-2 text-sm " placeholder={t[lang].checkoutDate} type="date" />
+                <div className="flex flex-col justify-between">
+                    <p className="text-lg font-semibold mb-3">Patient Informations</p>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].name}</label>
+                        <input dir="ltr" onKeyDown={(e) => handleEnter(e, 'number')}
+                            autoFocus id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="border border-gray-200 rounded-lg p-3 text-sm" placeholder={t[lang].name} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].number}</label>
+                        <input dir="ltr" onKeyDown={(e) => handleEnter(e, 'address')} id="number" value={newClient.number} onChange={(e) => setNewClient({ ...newClient, number: e.target.value })} className="border border-gray-200 rounded-lg p-3 text-sm" placeholder={t[lang].number} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].address}</label>
+                        <input dir="ltr" onKeyDown={(e) => handleEnter(e, 'device-select')}
+                            id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="border border-gray-200 rounded-lg p-3 text-sm" placeholder={t[lang].address} />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].selectDevice}</label>
+                        <select onKeyDown={(e) => handleEnter(e, 'checkout')} id="device-select" value={newClient.device} onChange={(e) => setNewClient({ ...newClient, device: e.target.value })} className="border appearance-none border-gray-200 rounded-lg p-3 text-sm text-gray-600">
+                            <option value="">{t[lang].selectDevice}</option>
+                            {devices
+                                .filter(d => d.status === "available" || d.id === newClient.device)
+                                .map((device, index) => (
+                                    <option key={index} value={device.id}>{device.id}</option>
+                                ))}
+                        </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].checkoutDate}</label>
+                        <input lang="en-GB" onKeyDown={(e) => handleEnter(e, 'duration')} id="checkout" value={newClient.checkoutDate} onChange={(e) => setNewClient({ ...newClient, checkoutDate: e.target.value })} className="border border-gray-200 rounded-lg p-3 text-sm " placeholder={t[lang].checkoutDate} type="date" />
+                    </div>
 
                 </div>
 
                 <div className="w-px bg-gray-200 mx-2 self-stretch" />
                 <div className="flex flex-col gap-4 ">
-
                     <div className="flex flex-col gap-4">
-                        <div className="flex justify-between items-center">
-                            <label>{t[lang].duration}</label>
-                            <button
-                                onClick={() => setDurationMode(durationMode === "radio" ? "number" : "radio")}
-                                className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
-                                {durationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
-                            </button>
-                        </div>
-                        {durationMode === "radio" ? (
-                            <div className="flex flex-row flex-1 text-s justify-between ">
-                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                    <input id="duration" className="accent-indigo-400" type="radio" onKeyDown={(e) => handleEnter(e, 'amount')} name="duration" checked={newClient.duration === 10} onChange={(e) => setNewClient({
-                                        ...newClient, duration: 10,
-                                        Amount: paymentMode === "immediate" ? calculateAmount(10) : "",
-                                        Bill: paymentMode === "bill" ? calculateAmount(10) : ""
-                                    })} />
-                                    <span>10 {t[lang].durationDays}</span>
+                        <p className="text-lg font-semibold">Payement Informations</p>
 
-                                </label>
-                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                    <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 20} onChange={(e) => setNewClient({
-                                        ...newClient, duration: 20,
-                                        Amount: paymentMode === "immediate" ? calculateAmount(20) : "",
-                                        Bill: paymentMode === "bill" ? calculateAmount(20) : ""
-                                    })} />
-                                    <span>20 {t[lang].durationDays}</span>
-
-                                </label>
-                                <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                    <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 30} onChange={(e) => setNewClient({
-                                        ...newClient, duration: 30,
-                                        Amount: paymentMode === "immediate" ? calculateAmount(30) : "",
-                                        Bill: paymentMode === "bill" ? calculateAmount(30) : ""
-                                    })} />
-                                    <span>30 {t[lang].durationDays}</span>
-
-                                </label>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex justify-between items-center">
+                                <label className="text-sm text-slate-600">{t[lang].duration}</label>
+                                <button
+                                    onClick={() => setDurationMode(durationMode === "radio" ? "number" : "radio")}
+                                    className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
+                                    {durationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
+                                </button>
                             </div>
-                        ) : (
-                            <input
-                                type="number"
-                                min="1"
-                                value={newClient.duration || ""}
-                                onChange={(e) => {
-                                    const raw = e.target.value
-                                    const days = raw === "" ? null : Math.max(1, Number(raw))
-                                    setNewClient({
-                                        ...newClient,
-                                        duration: days,
-                                        Amount: paymentMode === "immediate" && days ? calculateAmount(days) : "",
-                                        Bill: paymentMode === "bill" && days ? calculateAmount(days) : ""
-                                    })
-                                }}
-                                className="border border-gray-200 rounded-lg p-2 text-sm"
-                                placeholder="Number of days"
-                            />
-                        )}
+                            {durationMode === "radio" ? (
+                                <div className="flex flex-row flex-1 text-s justify-between ">
+                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                        <input id="duration" className="accent-indigo-400" type="radio" onKeyDown={(e) => handleEnter(e, 'amount')} name="duration" checked={newClient.duration === 10} onChange={(e) => setNewClient({
+                                            ...newClient, duration: 10,
+                                            Amount: paymentMode === "immediate" ? calculateAmount(10) : "",
+                                            Bill: paymentMode === "bill" ? calculateAmount(10) : ""
+                                        })} />
+                                        <span>10 {t[lang].durationDays}</span>
+
+                                    </label>
+                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                        <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 20} onChange={(e) => setNewClient({
+                                            ...newClient, duration: 20,
+                                            Amount: paymentMode === "immediate" ? calculateAmount(20) : "",
+                                            Bill: paymentMode === "bill" ? calculateAmount(20) : ""
+                                        })} />
+                                        <span>20 {t[lang].durationDays}</span>
+
+                                    </label>
+                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
+                                        <input className="accent-indigo-400" type="radio" name="duration" onKeyDown={(e) => handleEnter(e, 'amount')} checked={newClient.duration === 30} onChange={(e) => setNewClient({
+                                            ...newClient, duration: 30,
+                                            Amount: paymentMode === "immediate" ? calculateAmount(30) : "",
+                                            Bill: paymentMode === "bill" ? calculateAmount(30) : ""
+                                        })} />
+                                        <span>30 {t[lang].durationDays}</span>
+
+                                    </label>
+                                </div>
+                            ) : (
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={newClient.duration || ""}
+                                    onChange={(e) => {
+                                        const raw = e.target.value
+                                        const days = raw === "" ? null : Math.max(1, Number(raw))
+                                        setNewClient({
+                                            ...newClient,
+                                            duration: days,
+                                            Amount: paymentMode === "immediate" && days ? calculateAmount(days) : "",
+                                            Bill: paymentMode === "bill" && days ? calculateAmount(days) : ""
+                                        })
+                                    }}
+                                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                                    placeholder="Number of days"
+                                />
+                            )}
+                        </div>
+
+
                         <div className="flex rounded-lg overflow-hidden border border-gray-200">
                             <button
                                 onClick={() => {
@@ -377,77 +397,82 @@ export function DisplayClients() {
                             </button>
                         </div>
 
-                        {paymentMode === "immediate" ? (
-                            <input
-                                id="amount"
-                                value={newClient.Amount}
-                                onKeyDown={(e) => handleEnter(e, 'observation')}
-                                onChange={(e) => {
-                                    const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
-                                    setNewClient({ ...newClient, Amount: val, Bill: "" })
-                                }}
-                                className="border border-gray-200 rounded-lg p-2 text-sm"
-                                placeholder={t[lang].paidAmount}
-                                type="number"
-                                min="0"
-                            />
-                        ) : (
-                            <input
-                                id="amount"
-                                value={newClient.Bill}
-                                onKeyDown={(e) => handleEnter(e, 'observation')}
-                                onChange={(e) => {
-                                    const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
-                                    setNewClient({ ...newClient, Bill: val, Amount: "" })
-                                }}
-                                className="border border-gray-200 rounded-lg p-2 text-sm"
-                                placeholder={t[lang].bill}
-                                type="number"
-                                min="0"
-                            />
-                        )}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm text-slate-600">{t[lang].payement}</label>
+
+                            {paymentMode === "immediate" ? (
+                                <input
+                                    id="amount"
+                                    value={newClient.Amount}
+                                    onKeyDown={(e) => handleEnter(e, 'observation')}
+                                    onChange={(e) => {
+                                        const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                        setNewClient({ ...newClient, Amount: val, Bill: "" })
+                                    }}
+                                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                                    placeholder={t[lang].paidAmount}
+                                    type="number"
+                                    min="0"
+                                />
+                            ) : (
+                                <input
+                                    id="amount"
+                                    value={newClient.Bill}
+                                    onKeyDown={(e) => handleEnter(e, 'observation')}
+                                    onChange={(e) => {
+                                        const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                        setNewClient({ ...newClient, Bill: val, Amount: "" })
+                                    }}
+                                    className="border border-gray-200 rounded-lg p-2 text-sm"
+                                    placeholder={t[lang].bill}
+                                    type="number"
+                                    min="0"
+                                />
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-slate-600">{t[lang].observation}</label>
+                        <input
+                            id="observation"
+                            value={newClient.observation || ""}
+                            onKeyDown={(e) => handleEnter(e, 'insured')}
+                            onChange={(e) => setNewClient({ ...newClient, observation: e.target.value || null })}
+                            className="border border-gray-200 rounded-lg p-2 text-sm"
+                            placeholder={`${t[lang].observationText}`}
+                        />
                     </div>
 
-                    <hr className="border-t border-gray-400 " />
 
-                    <input
-                        id="observation"
-                        value={newClient.observation || ""}
-                        onKeyDown={(e) => handleEnter(e, 'insured')}
-                        onChange={(e) => setNewClient({ ...newClient, observation: e.target.value || null })}
-                        className="border border-gray-200 rounded-lg p-2 text-sm"
-                        placeholder={`${t[lang].observationText}`}
-                    />
-                    <div className=" flex text-base gap-2  items-center justify-between">
-                        <label className=" ml-4" htmlFor="insured">{t[lang].insuranceLabel} </label>
+                    <div className=" flex items-center justify-between">
+                        <label className="  text-sm text-slate-600" htmlFor="insured">{t[lang].insuranceLabel} :</label>
                         <input
                             value={newClient.guaranteed || ""}
-                            onKeyDown={(e) => handleEnter(e, 'called')}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    if (isFormValid()) saveClient()
+                                }
+                            }}
                             onChange={(e) => {
                                 const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
                                 setNewClient({ ...newClient, guaranteed: val })
                             }}
-                            className="border border-gray-200 rounded-lg p-2 text-sm"
+                            className="border w-[60%] border-gray-200 rounded-lg  p-2 text-sm"
                             placeholder="0"
                             type="number"
                             min="0"
                             id="insured"
                         />
                     </div>
-                    <hr className="border-t border-gray-400 " />
 
                     <div className="flex text-base gap-2 px-2 items-center">
                         <input
                             checked={newClient.called}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    setNewClient({ ...newClient, called: !newClient.called })
-                                }
-                            }}
+
                             onChange={(e) => setNewClient({ ...newClient, called: e.target.checked })}
                             className="scale-150 cursor-pointer accent-indigo-400" type="checkbox" id="called" />
-                        <label className="ml-4 flex flex-row items-center gap-2" htmlFor="called"><Phone size={20} strokeWidth={2.5} className="text-indigo-500" />Called client</label>
+                        <label className="ml-4 flex flex-row items-center gap-2" htmlFor="called"><Phone size={20} strokeWidth={2.5} className="text-indigo-500" />{t[lang].Calling}</label>
                     </div>
                 </div>
             </div>
@@ -513,118 +538,123 @@ export function DisplayClients() {
                     <button
                         onClick={payOffBill}
                         className="bg-blue-400 flex-1 text-white rounded-lg py-2 hover:bg-blue-500">
-                        Pay off bill ({newClient.Bill} DA)
+                        {t[lang].billPaid} ({newClient.Bill} DA)
                     </button>
                 )}
                 {editIndex !== null ?
                     newClient.status === "due" ?
                         <>
-                            <button
-                                onClick={() => { extendClient() }}
-                                disabled={!newClient.extendedDuration || newClient.extendedDuration <= 0}
-                                className="bg-orange-400 flex-1 text-white rounded-lg py-2 hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                                {t[lang].extendPeriod}
-                            </button>
-                            <div className="flex rounded-lg overflow-hidden border border-gray-200">
-                                <button
-                                    onClick={() => {
-                                        setExtendPaymentMode("immediate")
-                                        if (newClient.extendedDuration) {
-                                            setNewClient({
-                                                ...newClient,
-                                                billExtended: 0,
-                                                amountExtended: newClient.extendedDuration * 70
-                                            })
-                                        }
-                                    }}
-                                    className={`flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "immediate" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
-                                    {t[lang].PayNow}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setExtendPaymentMode("bill")
-                                        if (newClient.extendedDuration) {
-                                            setNewClient({
-                                                ...newClient,
-                                                billExtended: newClient.extendedDuration * 70,
-                                                amountExtended: 0
-                                            })
-                                        }
-                                    }}
-                                    className={`flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "bill" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
-                                    {t[lang].PayLater}
-                                </button>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <label>{t[lang].extendingDuration}</label>
-                                <button
-                                    onClick={() => setExtendDurationMode(extendDurationMode === "radio" ? "number" : "radio")}
-                                    className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
-                                    {extendDurationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
-                                </button>
-                            </div>
-
-                            {extendDurationMode === "radio" ? (
-                                <div className="flex flex-row flex-1 gap-14 justify-center ">
-                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 10}
-                                            onChange={(e) => {
-                                                setNewClient({
-                                                    ...newClient,
-                                                    extendedDuration: 10,
-                                                    billExtended: extendPaymentMode === "bill" ? 10 * 70 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 10 * 70 : 0
-                                                });
-                                            }} />
-                                        <span>10 {t[lang].durationDays}</span>
-                                    </label>
-
-                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 20}
-                                            onChange={(e) => {
-                                                setNewClient({
-                                                    ...newClient,
-                                                    extendedDuration: 20,
-                                                    billExtended: extendPaymentMode === "bill" ? 20 * 70 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 20 * 70 : 0
-                                                });
-                                            }} />
-                                        <span>20 {t[lang].durationDays}</span>
-                                    </label>
-
-                                    <label className="flex flex-row gap-2 justify-center items-center cursor-pointer">
-                                        <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 30}
-                                            onChange={(e) => {
-                                                setNewClient({
-                                                    ...newClient,
-                                                    extendedDuration: 30,
-                                                    billExtended: extendPaymentMode === "bill" ? 30 * 70 : 0,
-                                                    amountExtended: extendPaymentMode === "immediate" ? 30 * 70 : 0
-                                                });
-                                            }} />
-                                        <span>30 {t[lang].durationDays}</span>
-                                    </label>
+                            <div className="bg-slate-100 p-4 border border-slate-300 rounded-lg">
+                                <div className="flex justify-between items-center mb-4">
+                                    <label className="text-slate-600 font-semibold">{t[lang].extendingDuration}</label>
+                                    <button
+                                        onClick={() => setExtendDurationMode(extendDurationMode === "radio" ? "number" : "radio")}
+                                        className="px-2 py-1 rounded-md text-xs text-indigo-500 hover:text-indigo-800 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">
+                                        {extendDurationMode === "radio" ? `${t[lang].durationEnter}` : `${t[lang].presets}`}
+                                    </button>
                                 </div>
-                            ) : (
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={newClient.extendedDuration || ""}
-                                    onChange={(e) => {
-                                        const raw = e.target.value
-                                        const days = raw === "" ? null : Math.max(1, Number(raw))
-                                        setNewClient({
-                                            ...newClient,
-                                            extendedDuration: days,
-                                            billExtended: extendPaymentMode === "bill" && days ? days * 70 : 0,
-                                            amountExtended: extendPaymentMode === "immediate" && days ? days * 70 : 0
-                                        })
-                                    }}
-                                    className="border border-gray-200 rounded-lg p-2 text-sm"
-                                    placeholder="Number of days"
-                                />
-                            )}
+
+                                {extendDurationMode === "radio" ? (
+                                    <div className="flex flex-row flex-1 gap-14 justify-between ">
+                                        <label className="flex flex-row py-2 w-[28%] px-4 justify-start bg-white rounded-md border border-slate-200 gap-2  items-center cursor-pointer">
+                                            <input className=" accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 10}
+                                                onChange={(e) => {
+                                                    setNewClient({
+                                                        ...newClient,
+                                                        extendedDuration: 10,
+                                                        billExtended: extendPaymentMode === "bill" ? 10 * 70 : 0,
+                                                        amountExtended: extendPaymentMode === "immediate" ? 10 * 70 : 0
+                                                    });
+                                                }} />
+                                            <span>10 {t[lang].durationDays}</span>
+                                        </label>
+
+                                        <label className="flex flex-row py-2 w-[28%] px-4 justify-start bg-white rounded-md border border-slate-200 gap-2  items-center cursor-pointer">
+                                            <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 20}
+                                                onChange={(e) => {
+                                                    setNewClient({
+                                                        ...newClient,
+                                                        extendedDuration: 20,
+                                                        billExtended: extendPaymentMode === "bill" ? 20 * 70 : 0,
+                                                        amountExtended: extendPaymentMode === "immediate" ? 20 * 70 : 0
+                                                    });
+                                                }} />
+                                            <span>20 {t[lang].durationDays}</span>
+                                        </label>
+
+                                        <label className="flex flex-row py-2 w-[28%] px-4 justify-start bg-white rounded-md border border-slate-200 gap-2  items-center cursor-pointer">
+                                            <input className="accent-indigo-400" type="radio" name="extendedDuration" checked={newClient.extendedDuration === 30}
+                                                onChange={(e) => {
+                                                    setNewClient({
+                                                        ...newClient,
+                                                        extendedDuration: 30,
+                                                        billExtended: extendPaymentMode === "bill" ? 30 * 70 : 0,
+                                                        amountExtended: extendPaymentMode === "immediate" ? 30 * 70 : 0
+                                                    });
+                                                }} />
+                                            <span>30 {t[lang].durationDays}</span>
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={newClient.extendedDuration || ""}
+                                        onChange={(e) => {
+                                            const raw = e.target.value
+                                            const days = raw === "" ? null : Math.max(1, Number(raw))
+                                            setNewClient({
+                                                ...newClient,
+                                                extendedDuration: days,
+                                                billExtended: extendPaymentMode === "bill" && days ? days * 70 : 0,
+                                                amountExtended: extendPaymentMode === "immediate" && days ? days * 70 : 0
+                                            })
+                                        }}
+                                        className="w-[47%] border  border-gray-200 rounded-lg p-2 text-sm "
+                                        placeholder={t[lang].durationDays}
+                                    />
+                                )}
+                                <div className="h-[1px] w-full bg-slate-300 my-4"></div>
+                                <div className="flex  flex-row flex-1 justify-between">
+                                    <button
+                                        onClick={() => { extendClient() }}
+                                        disabled={!newClient.extendedDuration || newClient.extendedDuration <= 0}
+                                        className="flex bg-indigo-400 px-6 gap-2 items-center text-white rounded-s py-2 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <SendHorizontal size={16} />{t[lang].extendPeriod}
+                                    </button>
+                                    <div className="flex w-[50%] rounded-s overflow-hidden border border-gray-200">
+                                        <button
+                                            onClick={() => {
+                                                setExtendPaymentMode("immediate")
+                                                if (newClient.extendedDuration) {
+                                                    setNewClient({
+                                                        ...newClient,
+                                                        billExtended: 0,
+                                                        amountExtended: newClient.extendedDuration * 70
+                                                    })
+                                                }
+                                            }}
+                                            className={` flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "immediate" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
+                                            {t[lang].PayNow}
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setExtendPaymentMode("bill")
+                                                if (newClient.extendedDuration) {
+                                                    setNewClient({
+                                                        ...newClient,
+                                                        billExtended: newClient.extendedDuration * 70,
+                                                        amountExtended: 0
+                                                    })
+                                                }
+                                            }}
+                                            className={`flex-1 py-2 text-sm transition-colors ${extendPaymentMode === "bill" ? "bg-indigo-400 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
+                                            {t[lang].PayLater}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </>
                         : ""
                     : ""

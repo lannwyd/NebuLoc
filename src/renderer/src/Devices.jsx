@@ -37,8 +37,22 @@ export function Devices() {
             setIsOpen(false)
         }
     }
+
     async function saveDevice() {
-        await window.electron.ipcRenderer.invoke('add-device', { id: newDeviceId, status: "available", workingDuration: 0, notes: newDeviceNotes })
+        if (editIndex === null) {
+            await window.electron.ipcRenderer.invoke('add-device', {
+                id: newDeviceId,
+                status: "available",
+                workingDuration: 0,
+                notes: newDeviceNotes
+            })
+        } else {
+            const existing = devices[editIndex]
+            await window.electron.ipcRenderer.invoke('update-device', editIndex, {
+                ...existing,
+                notes: newDeviceNotes
+            })
+        }
         window.electron.ipcRenderer.invoke('get-devices').then(setDevices)
         setIsOpen(false)
     }
@@ -76,6 +90,7 @@ export function Devices() {
             <div className="flex justify-end">
                 <div onClick={() => {
                     setNewDeviceId("")
+                    setNewDeviceNotes("")
                     setEditIndex(null)
                     setIsOpen(true)
                 }} className="flex items-center gap-1 bg-indigo-400 text-white rounded-lg py-1 px-3 cursor-pointer transition-colors hover:bg-indigo-500">
@@ -84,7 +99,7 @@ export function Devices() {
             </div>
         </div>
 
-        <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title="Add New device">
+        <ModalDevices isOpen={isOpen} onClose={() => setIsOpen(false)} title={editIndex === null ? "Add New device" : "Edit device"}>
             <div className="flex flex-col gap-4">
                 <input
                     onKeyDown={(e) => {
@@ -95,7 +110,8 @@ export function Devices() {
                     }}
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
-                    className={`border rounded-lg p-2 text-sm ${newDeviceId.trim() === "" ? "border-red-300" : "border-gray-200"}`}
+                    readOnly={editIndex !== null}
+                    className={`border rounded-lg p-2 text-sm ${newDeviceId.trim() === "" ? "border-red-300" : "border-gray-200"} ${editIndex !== null ? "bg-gray-100 text-gray-500" : ""}`}
                     placeholder={t[lang].idNumber}
                     id="device"
                 />
@@ -130,7 +146,7 @@ export function Devices() {
 
 
         <div className="flex flex-col mx-2 mt-1">
-            {[...devices].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true })).map((device, index) => (
+            {[...devices].sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true })).map((device, index) => (
                 <div key={index} className="grid grid-cols-5 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-1">{device.id}</p>
                     <div className="col-span-1 flex justify-start">
@@ -138,8 +154,9 @@ export function Devices() {
                             {device.status === "available" ? t[lang].available : t[lang].inUse}
                         </span>
                     </div>
-                    <p className="text-sm text-gray-800 col-span-1">{getWorkingDuration(device.id)} {t[lang].days}</p>
-                    {device.notes ? (
+                    <p className="text-sm text-gray-800 col-span-1">
+                        {typeof device.id === "string" ? device.id : JSON.stringify(device.id)}
+                    </p>                    {device.notes ? (
                         <div className="relative group">
                             <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
                             <div className={`absolute bottom-full mb-2 w-48 bg-slate-100 border border-gray-600 rounded-xl p-3 shadow-lg z-10
@@ -152,6 +169,16 @@ export function Devices() {
                         </div>
                     ) : <Minus className="text-slate-500" />}
                     <div className="col-span-1 flex justify-end gap-2">
+                        <Pencil
+                            onClick={() => {
+                                setNewDeviceId(device.id)
+                                setNewDeviceNotes(device.notes || "")
+                                setEditIndex(index)
+                                setIsOpen(true)
+                            }}
+                            className="text-indigo-500 cursor-pointer hover:text-indigo-800"
+                            size={18}
+                        />
                         <X onClick={() => deleteDevice(index)} className="text-red-400 cursor-pointer hover:text-red-700" />
                     </div>
 

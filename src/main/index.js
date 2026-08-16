@@ -90,10 +90,10 @@ const clients = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, '
 
     if (dueClients.length === 1) {
         new Notification({ title: 'Device Overdue',
-    body: `${dueClients[0].name} has not returned the device yet`,
+    body: ` لم يقم بإرجاع جهازه ${dueClients[0].name}`,
     icon: join(__dirname, '../../resources/icon.png'),timeoutType: 'never', }).show()
     } else if (dueClients.length > 1) {
-        new Notification({ title: 'Devices Overdue', body: `${dueClients.length} clients have not returned their devices` }).show()
+        new Notification({ title: 'Devices Overdue', body: ` عملاء لم يقومو بإرجاع اجهزتهم ${dueClients.length}` }).show()
     }
 
     ipcMain.handle('get-dashboard-password', () => {
@@ -147,9 +147,9 @@ ipcMain.handle('delete-device', (event, index) => {
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 
-ipcMain.handle('update-device', (event, index, updatedId) => {
+ipcMain.handle('update-device', (event, index, updatedDevice) => {
     const devices = JSON.parse(fs.readFileSync(devicesPath, 'utf-8'))
-    devices[index].id = updatedId
+    devices[index] = updatedDevice
     fs.writeFileSync(devicesPath, JSON.stringify(devices))
 })
 

@@ -30,7 +30,7 @@ export const t = {
     devicesAvailable: "Devices Available",
     addNewClient: "Add New Client",
     updateClient: "Update Client",
-    name: "Name",
+    name: "Patient Name",
     number: "Number",
     checkout: "Checkout",
     duration: "Duration",
@@ -42,13 +42,13 @@ export const t = {
     checkoutDate: "Checkout Date",
     durationDays: "( days )",
     paidAmount: "Paid Amount",
-    insuranceLabel: "insurance amount",
+    insuranceLabel: "Insurance Amount",
     save: "Save",
     deviceReturned: "Device returned",
     update: "Update",
     uncheck: "Uncheck",
-    extendPeriod: "Extend Period For :",
-    extendingDuration: "Extending Duration :",
+    extendPeriod: "Extend ",
+    extendingDuration: "Extending Duration ",
     still: "still",
     due_status: "due",
     done: "returned",
@@ -73,7 +73,11 @@ export const t = {
     late:"late",
     unlock:"Enter",
     enterPassword:"Enter the password",
-    wrongPassword : "The password is wrong"
+    wrongPassword : "The password is wrong",
+    payement:"Paid",
+    billPaid:"Pay off bill",
+    Calling:"Called client"
+    
 
     },
     ar: {
@@ -107,7 +111,7 @@ export const t = {
     devicesAvailable: "الأجهزة المتاحة",
     addNewClient: "إضافة عميل جديد",
     updateClient: "تحديث العميل",
-    name: "الاسم",
+    name: "اسم المريض",
     number: "الرقم",
     checkout: "تاريخ الاستعارة",
     duration: "المدة",
@@ -124,8 +128,8 @@ export const t = {
     deviceReturned: "تم إرجاع الجهاز",
     update: "تحديث",
     uncheck: "إلغاء",
-    extendPeriod: "تمديد الفترة :",
-    extendingDuration: "مدة التمديد :",
+    extendPeriod: "تمديد ",
+    extendingDuration: "مدة التمديد ",
     still: "جارٍ",
     due_status: "متأخر",
     done: "مسترجع",
@@ -150,6 +154,10 @@ export const t = {
     late:"التأخر",
     unlock:"ادخل",
     enterPassword:"ادخل الرقم السري",
-    wrongPassword : "الرقم الذي ادخلته خاطئ"
+    wrongPassword : "الرقم الذي ادخلته خاطئ",
+    payement:"المبلغ ",
+    billPaid:"دفع فاتورته",
+    Calling:"تم الاتصال بالزبون"
+
     }
 }
