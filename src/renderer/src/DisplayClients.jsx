@@ -94,15 +94,15 @@ export function DisplayClients() {
     }
 
     function getStatus(duedate) {
-        const date = new Date(duedate);
-        date.setHours(0, 0, 0, 0);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (today > date) {
-            return "due"
-        }
-        return "still";
+    const date = new Date(duedate);
+    date.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (today >= date) {
+        return "due"
     }
+    return "still";
+}
 
     async function saveClient(statusOverride = null) {
         let clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
@@ -664,28 +664,28 @@ export function DisplayClients() {
         </ModalClients>
 
         <div style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
-            <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("name")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].name}</p> {sortKey === "name"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-2 flex items-center justify-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-2 flex items-center justify-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].number}</p>
             </div>
-            <div className="col-span-1 flex items-center justify-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex items-center justify-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].device}</p>
             </div>
-            <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("checkoutdate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].checkout}</p>{sortKey === "checkoutdate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].duration}</p>
             </div>
-            <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-xs font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("duedate")} className="col-span-2 flex items-center justify-center cursor-pointer gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].due}</p>{sortKey === "duedate"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
@@ -693,25 +693,25 @@ export function DisplayClients() {
             </div>
 
 
-            <div className="col-span-2 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-2 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].guaranteed}</p>
             </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].amount}</p>
             </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].late}</p>
             </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].bill}</p>
             </div>
-            <div onClick={() => channgedisplay("status")} className="col-span-1 flex items-center justify-center cursor-pointer text-xs font-semibold text-gray-600">
+            <div onClick={() => channgedisplay("status")} className="col-span-1 flex items-center justify-center cursor-pointer text-sm font-semibold text-gray-600">
                 {sortKey === "status"
                     ? sortDir === 1 ? <ChevronDown size={16} /> : <ChevronUp size={16} />
                     : <ChevronsUpDown size={16} />
                 }
             </div>
-            <div className="col-span-1 flex justify-center items-center gap-1 text-xs font-semibold text-gray-600">
+            <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].called}</p>
             </div>
             <div className="col-span-2" />
@@ -724,32 +724,32 @@ export function DisplayClients() {
                 const lateInfo = getLateInfo(dueDateStr)
 
                 return (<div key={item.id ?? (item.name + item.number)} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
-                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
-                    <p dir="ltr" className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
-                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center break-keep  ">{item.device}</p>
-                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{item.checkoutDate}</p>
-                    <p className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.duration}</p>
-                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center  ">{dueDateStr}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
+                    <p dir="ltr" className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.number}</p>
+                    <p className="text-sm text-gray-800 col-span-1 flex items-center justify-center text-center break-keep  ">{item.device}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-center  ">{item.checkoutDate}</p>
+                    <p className="text-sm text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.duration}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-center  ">{dueDateStr}</p>
 
 
-                    <p className="text-xs text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
-                    <p dir="ltr" className="text-xs text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
+                    <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
+                    <p dir="ltr" className="text-sm text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
                     <div className="col-span-1 flex items-center justify-center  ">
                         {currentstatus === "due" && lateInfo.days > 0 ? (
-                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
+                            <span className="text-sm px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
                                 {lateInfo.days}d
                             </span>
                         ) : "-"}
                     </div>
                     <div dir="ltr" className="col-span-1 flex items-center justify-center">
                         {(Number(item.Bill || 0) + lateInfo.bill) > 0 ? (
-                            <span className="text-xs px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300">
+                            <span className="text-sm px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300">
                                 {Number(item.Bill || 0) + lateInfo.bill}
                             </span>
                         ) : ""}
                     </div>
                     <div className="col-span-1 flex items-center justify-center  ">
-                        <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
+                        <span className={`text-sm px-2 py-0.5 rounded-full shadow-md ${statusStyles[currentstatus]}`}>
                             {statusLabels[currentstatus]}
                         </span>
                     </div>
@@ -764,7 +764,7 @@ export function DisplayClients() {
                                 opacity-0 scale-95 pointer-events-none
                                 group-hover:opacity-100 group-hover:scale-100
                                 transition-all duration-200 ${lang === 'ar' ? 'left-0 origin-bottom-left' : 'right-0 origin-bottom-right'}`}>
-                                    <p className="text-xs font-semibold text-gray-400 mb-1">{t[lang].observation}</p>
+                                    <p className="text-xs font-semibold text-gray-600 mb-1">{t[lang].observation}</p>
                                     <p className="text-xs text-gray-800 break-words">{item.observation}</p>
                                 </div>
                             </div>
