@@ -157,8 +157,8 @@ export function Devices() {
                             {device.status === "available" ? t[lang].available : t[lang].inUse}
                         </span>
                     </div>
-                    <p className="px-6 text-sm text-gray-800 col-span-1  ">
-                        {typeof device.id === "string" ? device.id : JSON.stringify(device.id)}
+                    <p className="px-6 text-sm text-gray-800 col-span-1">
+                        {getWorkingDuration(device.id)} {t[lang].days}
                     </p>
                     {device.notes ? (
                         <div className="relative group px-2">
@@ -175,7 +175,7 @@ export function Devices() {
                         <div className="px-2">
                             <Minus className="text-slate-500 " />
                         </div>)
-                        }
+                    }
 
                     <div className="col-span-1 flex justify-end gap-2">
                         <Pencil

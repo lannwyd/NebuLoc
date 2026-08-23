@@ -157,6 +157,7 @@ export function DisplayClients() {
             setOriginalData(d)
         })
     }
+    
 
     function channgedisplay(basedOn) {
         if (sortKey === basedOn) {
@@ -697,7 +698,7 @@ export function DisplayClients() {
                 <p>{t[lang].guaranteed}</p>
             </div>
             <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
-                <p>{t[lang].amount}</p>
+                <p>{t[lang].paidAmount}</p>
             </div>
             <div className="col-span-1 flex justify-center items-center gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].late}</p>

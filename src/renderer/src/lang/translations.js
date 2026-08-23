@@ -31,7 +31,7 @@ export const t = {
     addNewClient: "Add New Client",
     updateClient: "Update Client",
     name: "Patient Name",
-    number: "Number",
+    number: "Phone Number",
     checkout: "Checkout",
     duration: "Duration",
     due: "Due",
@@ -74,7 +74,7 @@ export const t = {
     unlock:"Enter",
     enterPassword:"Enter the password",
     wrongPassword : "The password is wrong",
-    payement:"Paid",
+    payement:" Paid",
     billPaid:"Pay off bill",
     Calling:"Called client"
     
@@ -111,7 +111,7 @@ export const t = {
     addNewClient: "إضافة عميل جديد",
     updateClient: "تحديث العميل",
     name: "اسم المريض",
-    number: "الرقم",
+    number: "رقم الهاتف",
     checkout: "تاريخ الاستعارة",
     duration: "المدة",
     due: "تاريخ الاستلام",
