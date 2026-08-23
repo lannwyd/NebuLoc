@@ -17,6 +17,7 @@ export function DisplayClients() {
     const [paymentMode, setPaymentMode] = useState("immediate")
     const [originalData, setOriginalData] = useState([]);
     const [extendPaymentMode, setExtendPaymentMode] = useState("immediate")
+    const [payAmount, setPayAmount] = useState("")
     const { lang } = useLang()
 
     const emptyClient = {
@@ -94,15 +95,15 @@ export function DisplayClients() {
     }
 
     function getStatus(duedate) {
-    const date = new Date(duedate);
-    date.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (today >= date) {
-        return "due"
+        const date = new Date(duedate);
+        date.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (today >= date) {
+            return "due"
+        }
+        return "still";
     }
-    return "still";
-}
 
     async function saveClient(statusOverride = null) {
         let clientToSave = statusOverride ? { ...newClient, status: statusOverride } : newClient;
@@ -133,14 +134,19 @@ export function DisplayClients() {
         setIsOpen(false)
     }
 
-    async function payOffBill() {
+    async function payOffBill(amount) {
+        const dueDateStr = calculateDueDate(newClient.checkoutDate, newClient.duration)
+        const totalOwed = Number(newClient.Bill || 0) + getLateInfo(dueDateStr).bill
+        const payment = Math.min(Math.max(0, Number(amount) || 0), totalOwed)
+
         const settled = {
             ...newClient,
-            Amount: Number(newClient.Amount || 0) + Number(newClient.Bill || 0),
-            Bill: 0,
+            Amount: Number(newClient.Amount || 0) + payment,
+            Bill: totalOwed - payment,
         }
         await window.electron.ipcRenderer.invoke('update-client', editIndex, settled)
         setNewClient(settled)
+        setPayAmount("")
         window.electron.ipcRenderer.invoke('get-clients').then((d) => {
             setData(d)
             setOriginalData(d)
@@ -157,7 +163,7 @@ export function DisplayClients() {
             setOriginalData(d)
         })
     }
-    
+
 
     function channgedisplay(basedOn) {
         if (sortKey === basedOn) {
@@ -535,13 +541,7 @@ export function DisplayClients() {
                 }
             </div>
             <div className="flex flex-col gap-5 mt-5">
-                {editIndex !== null && Number(newClient.Bill || 0) > 0 && (
-                    <button
-                        onClick={payOffBill}
-                        className="bg-blue-400 flex-1 text-white rounded-lg py-2 hover:bg-blue-500">
-                        {t[lang].billPaid} ({newClient.Bill} DA)
-                    </button>
-                )}
+
                 {editIndex !== null ?
                     newClient.status === "due" ?
                         <>
@@ -615,6 +615,28 @@ export function DisplayClients() {
                                         placeholder={t[lang].durationDays}
                                     />
                                 )}
+                                {newClient.extendedDuration > 0 && (
+                                    <div className="flex flex-col gap-1 my-4">
+                                        <label className="text-sm text-slate-600">
+                                            {extendPaymentMode === "bill" ? t[lang].bill : t[lang].paidAmount}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={extendPaymentMode === "bill" ? newClient.billExtended : newClient.amountExtended}
+                                            onChange={(e) => {
+                                                const val = e.target.value === "" ? "" : Math.max(0, Number(e.target.value))
+                                                setNewClient({
+                                                    ...newClient,
+                                                    billExtended: extendPaymentMode === "bill" ? val : 0,
+                                                    amountExtended: extendPaymentMode === "immediate" ? val : 0
+                                                })
+                                            }}
+                                            className="border border-gray-200 rounded-lg p-2 text-sm"
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                )}
                                 <div className="h-[1px] w-full bg-slate-300 my-4"></div>
                                 <div className="flex  flex-row flex-1 justify-between">
                                     <button
@@ -660,6 +682,37 @@ export function DisplayClients() {
                         : ""
                     : ""
                 }
+                {editIndex !== null && (Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill) > 0 && (
+                    <div className="bg-slate-100 p-4 border border-slate-300 rounded-lg flex flex-col gap-3">
+                        <div className="flex justify-between items-center">
+                            <label className="text-slate-600 font-semibold">{t[lang].billPaid}</label>
+                            <span className="text-sm text-slate-500">
+                                {Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill} DA
+                            </span>
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="number"
+                                min="0"
+                                value={payAmount}
+                                onChange={(e) => setPayAmount(e.target.value === "" ? "" : Math.max(0, Number(e.target.value)))}
+                                className="flex-1 border border-gray-200 rounded-lg p-2 text-sm"
+                                placeholder="0"
+                            />
+                            <button
+                                onClick={() => setPayAmount(Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill)}
+                                className="px-3 py-2 text-xs rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
+                                All
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => payOffBill(payAmount)}
+                            disabled={!payAmount || payAmount <= 0}
+                            className="bg-blue-400 text-white rounded-lg py-2 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                            {t[lang].billPaid}
+                        </button>
+                    </div>
+                )}
             </div>
 
         </ModalClients>
@@ -776,6 +829,7 @@ export function DisplayClients() {
                             const currentstatus = item.status === "done" ? "done" : getStatus(calculateDueDate(item.checkoutDate, item.duration))
                             setNewClient({ ...item, status: currentstatus })
                             setPaymentMode(Number(item.Bill || 0) > 0 ? "bill" : "immediate")
+                            setPayAmount("")
                             setEditIndex(Index)
                             setIsOpen(true)
                         }} className="text-indigo-500 min-w-[1.3rem] w-[1.3rem] cursor-pointer hover:text-indigo-800" />
