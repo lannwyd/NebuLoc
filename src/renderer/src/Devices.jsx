@@ -77,7 +77,7 @@ export function Devices() {
     return (<>
 
 
-        <div className="grid grid-cols-4 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
+        <div className="grid grid-cols-5 mx-2 mt-4 bg-gray-100 rounded-lg px-3 py-2">
             <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].device}</p>
             </div>
@@ -86,6 +86,9 @@ export function Devices() {
             </div>
             <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
                 <p>{t[lang].usedFor}</p>
+            </div>
+            <div className="flex justify-start items-center  gap-1 text-sm font-semibold text-gray-600">
+                <p>{t[lang].observation}</p>
             </div>
             <div className="flex justify-end">
                 <div onClick={() => {
@@ -147,17 +150,18 @@ export function Devices() {
 
         <div className="flex flex-col mx-2 mt-1">
             {[...devices].sort((a, b) => String(a.id ?? "").localeCompare(String(b.id ?? ""), undefined, { numeric: true })).map((device, index) => (
-                <div key={index} className="grid grid-cols-5 px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <div key={index} className="grid grid-cols-5 items-center  px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <p className="text-sm text-gray-800 col-span-1">{device.id}</p>
                     <div className="col-span-1 flex justify-start">
                         <span className={`text-xs px-2 py-0.5 rounded-full shadow-md ${device.status === "available" ? "bg-green-100 text-green-600 shadow-green-300" : "bg-red-100 text-red-600 shadow-red-300"}`}>
                             {device.status === "available" ? t[lang].available : t[lang].inUse}
                         </span>
                     </div>
-                    <p className="text-sm text-gray-800 col-span-1">
+                    <p className="px-6 text-sm text-gray-800 col-span-1  ">
                         {typeof device.id === "string" ? device.id : JSON.stringify(device.id)}
-                    </p>                    {device.notes ? (
-                        <div className="relative group">
+                    </p>
+                    {device.notes ? (
+                        <div className="relative group px-2">
                             <Eye className="text-slate-400 hover:text-slate-600 hover:cursor-pointer" />
                             <div className={`absolute bottom-full mb-2 w-48 bg-slate-100 border border-gray-600 rounded-xl p-3 shadow-lg z-10
                                 opacity-0 scale-95 pointer-events-none
@@ -167,7 +171,12 @@ export function Devices() {
                                 <p className="text-xs text-gray-800 break-words">{device.notes}</p>
                             </div>
                         </div>
-                    ) : <Minus className="text-slate-500" />}
+                    ) : (
+                        <div className="px-2">
+                            <Minus className="text-slate-500 " />
+                        </div>)
+                        }
+
                     <div className="col-span-1 flex justify-end gap-2">
                         <Pencil
                             onClick={() => {
