@@ -284,7 +284,7 @@ export function DisplayClients() {
         <ModalClients isOpen={isOpen} onClose={() => setIsOpen(false)} title={editIndex === null ? t[lang].addNewClient : t[lang].updateClient}>
             <div className="grid gap-4" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
                 <div className="flex flex-col justify-between">
-                    <p className="text-lg font-semibold mb-3">Patient Informations</p>
+                    <p className="text-lg font-semibold mb-3">{t[lang].patientInfo}</p>
                     <div className="flex flex-col gap-1">
                         <label className="text-sm text-slate-600">{t[lang].name}</label>
                         <input dir="ltr" onKeyDown={(e) => handleEnter(e, 'number')}
@@ -320,7 +320,7 @@ export function DisplayClients() {
                 <div className="w-px bg-gray-200 mx-2 self-stretch" />
                 <div className="flex flex-col gap-4 ">
                     <div className="flex flex-col gap-4">
-                        <p className="text-lg font-semibold">Payement Informations</p>
+                        <p className="text-lg font-semibold">{t[lang].payementInfo}</p>
 
                         <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-center">
@@ -702,7 +702,7 @@ export function DisplayClients() {
                             <button
                                 onClick={() => setPayAmount(Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill)}
                                 className="px-3 py-2 text-xs rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
-                                All
+                                {t[lang].All}
                             </button>
                         </div>
                         <button

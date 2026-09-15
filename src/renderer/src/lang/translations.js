@@ -76,8 +76,10 @@ export const t = {
     wrongPassword : "The password is wrong",
     payement:" Paid",
     billPaid:"Pay off bill",
-    Calling:"Called client"
-    
+    Calling:"Called client",
+    All:"All",
+    patientInfo:"Patient Info",
+    payementInfo:"Payement Info"
 
     },
     ar: {
@@ -156,7 +158,9 @@ export const t = {
     wrongPassword : "الرقم الذي ادخلته خاطئ",
     payement:"المبلغ ",
     billPaid:"دفع فاتورته",
-    Calling:"تم الاتصال بالزبون"
-
+    Calling:"تم الاتصال بالزبون",
+    All:"الكل",
+    patientInfo:"معلومات المريض",
+    payementInfo:"معلومات الدفع"
     }
 }
