@@ -4,7 +4,6 @@ import ModalClients from "./ModalClients";
 import { useLang } from './context/LanguageContext'
 import { t } from './lang/translations'
 
-
 export function DisplayClients() {
     const [isOpen, setIsOpen] = useState(false);
     const [editIndex, setEditIndex] = useState(null);
@@ -115,6 +114,11 @@ export function DisplayClients() {
             await window.electron.ipcRenderer.invoke('add-client', clientToSave)
             await window.electron.ipcRenderer.invoke('update-device-status', clientToSave.device, 'in-use')
         } else {
+            const originalClient = data[editIndex];
+            if (originalClient && (originalClient.checkoutDate !== clientToSave.checkoutDate || originalClient.duration !== clientToSave.duration)) {
+                clientToSave.lateSettledUntil = null;
+            }
+
             await window.electron.ipcRenderer.invoke('update-client', editIndex, clientToSave)
 
             if (previousDevice && previousDevice !== clientToSave.device) {
@@ -144,8 +148,7 @@ export function DisplayClients() {
         const settled = {
             ...newClient,
             Amount: Number(newClient.Amount || 0) + payment,
-            Bill: totalOwed - payment,
-            lateSettledUntil: new Date().toISOString().split('T')[0],
+            Bill: Number(newClient.Bill || 0) - payment,
         }
         await window.electron.ipcRenderer.invoke('update-client', editIndex, settled)
         setNewClient(settled)
@@ -166,7 +169,6 @@ export function DisplayClients() {
             setOriginalData(d)
         })
     }
-
 
     function channgedisplay(basedOn) {
         if (sortKey === basedOn) {
@@ -201,7 +203,8 @@ export function DisplayClients() {
             Amount: Number(newClient.Amount || 0) + Number(newClient.amountExtended || 0),
             extendedDuration: null,
             billExtended: 0,
-            amountExtended: 0
+            amountExtended: 0,
+            lateSettledUntil: null
         }
         await window.electron.ipcRenderer.invoke('update-client', editIndex, extended)
         window.electron.ipcRenderer.invoke('get-clients').then((d) => {
@@ -217,16 +220,6 @@ export function DisplayClients() {
         if (isNaN(date.getTime())) return "N/A"
         date.setDate(date.getDate() + Number(duration))
         return date.toISOString().split('T')[0]
-    }
-
-    function getLateDays(dueDate) {
-        if (dueDate === "N/A") return 0
-        const due = new Date(dueDate)
-        due.setHours(0, 0, 0, 0)
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const daysLate = Math.floor((today - due) / (1000 * 60 * 60 * 24))
-        return daysLate > 0 ? daysLate : 0
     }
 
     function getLateFeeInfo(dueDate, lateSettledUntil = null) {
@@ -791,8 +784,8 @@ export function DisplayClients() {
             {displayData.map((item) => {
                 const dueDateStr = calculateDueDate(item.checkoutDate, item.duration)
                 const currentstatus = item.status === "done" ? "done" : getStatus(dueDateStr);
-                const lateDays = getLateDays(dueDateStr)
                 const lateFeeInfo = getLateFeeInfo(dueDateStr, item.lateSettledUntil)
+                const lateDays = lateFeeInfo.days
 
                 return (<div key={item.id ?? (item.name + item.number)} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
                     <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
