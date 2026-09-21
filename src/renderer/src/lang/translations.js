@@ -79,7 +79,8 @@ export const t = {
     Calling:"Called client",
     All:"All",
     patientInfo:"Patient Info",
-    payementInfo:"Payement Info"
+    payementInfo:"Payement Info",
+    NofDays:"Number of days"
 
     },
     ar: {
@@ -161,6 +162,7 @@ export const t = {
     Calling:"تم الاتصال بالزبون",
     All:"الكل",
     patientInfo:"معلومات المريض",
-    payementInfo:"معلومات الدفع"
+    payementInfo:"معلومات الدفع",
+    NofDays:"عدد الأيام"
     }
 }

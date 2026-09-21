@@ -24,6 +24,7 @@ export function DisplayClients() {
         name: "", number: "", device: "", address: "", checkoutDate: "",
         duration: null, guaranteed: "", Amount: "", Bill: "", status: "still",
         extendedDuration: null, observation: null, called: false,
+        lateSettledUntil: null,
     }
 
     const [newClient, setNewClient] = useState(emptyClient)
@@ -136,13 +137,15 @@ export function DisplayClients() {
 
     async function payOffBill(amount) {
         const dueDateStr = calculateDueDate(newClient.checkoutDate, newClient.duration)
-        const totalOwed = Number(newClient.Bill || 0) + getLateInfo(dueDateStr).bill
+        const lateBillNow = getLateFeeInfo(dueDateStr, newClient.lateSettledUntil).bill
+        const totalOwed = Number(newClient.Bill || 0) + lateBillNow
         const payment = Math.min(Math.max(0, Number(amount) || 0), totalOwed)
 
         const settled = {
             ...newClient,
             Amount: Number(newClient.Amount || 0) + payment,
             Bill: totalOwed - payment,
+            lateSettledUntil: new Date().toISOString().split('T')[0],
         }
         await window.electron.ipcRenderer.invoke('update-client', editIndex, settled)
         setNewClient(settled)
@@ -216,13 +219,26 @@ export function DisplayClients() {
         return date.toISOString().split('T')[0]
     }
 
-    function getLateInfo(dueDate) {
-        if (dueDate === "N/A") return { days: 0, bill: 0 }
+    function getLateDays(dueDate) {
+        if (dueDate === "N/A") return 0
         const due = new Date(dueDate)
         due.setHours(0, 0, 0, 0)
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         const daysLate = Math.floor((today - due) / (1000 * 60 * 60 * 24))
+        return daysLate > 0 ? daysLate : 0
+    }
+
+    function getLateFeeInfo(dueDate, lateSettledUntil = null) {
+        if (dueDate === "N/A") return { days: 0, bill: 0 }
+        const due = new Date(dueDate)
+        due.setHours(0, 0, 0, 0)
+        const settled = lateSettledUntil ? new Date(lateSettledUntil) : null
+        if (settled) settled.setHours(0, 0, 0, 0)
+        const reference = settled && settled > due ? settled : due
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const daysLate = Math.floor((today - reference) / (1000 * 60 * 60 * 24))
         return daysLate > 0 ? { days: daysLate, bill: daysLate * 70 } : { days: 0, bill: 0 }
     }
 
@@ -377,7 +393,7 @@ export function DisplayClients() {
                                         })
                                     }}
                                     className="border border-gray-200 rounded-lg p-2 text-sm"
-                                    placeholder="Number of days"
+                                    placeholder={t[lang].NofDays}
                                 />
                             )}
                         </div>
@@ -682,12 +698,12 @@ export function DisplayClients() {
                         : ""
                     : ""
                 }
-                {editIndex !== null && (Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill) > 0 && (
+                {editIndex !== null && (Number(newClient.Bill || 0) + getLateFeeInfo(calculateDueDate(newClient.checkoutDate, newClient.duration), newClient.lateSettledUntil).bill) > 0 && (
                     <div className="bg-slate-100 p-4 border border-slate-300 rounded-lg flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                             <label className="text-slate-600 font-semibold">{t[lang].billPaid}</label>
                             <span className="text-sm text-slate-500">
-                                {Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill} DA
+                                {Number(newClient.Bill || 0) + getLateFeeInfo(calculateDueDate(newClient.checkoutDate, newClient.duration), newClient.lateSettledUntil).bill} DA
                             </span>
                         </div>
                         <div className="flex gap-2">
@@ -700,7 +716,7 @@ export function DisplayClients() {
                                 placeholder="0"
                             />
                             <button
-                                onClick={() => setPayAmount(Number(newClient.Bill || 0) + getLateInfo(calculateDueDate(newClient.checkoutDate, newClient.duration)).bill)}
+                                onClick={() => setPayAmount(Number(newClient.Bill || 0) + getLateFeeInfo(calculateDueDate(newClient.checkoutDate, newClient.duration), newClient.lateSettledUntil).bill)}
                                 className="px-3 py-2 text-xs rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
                                 {t[lang].All}
                             </button>
@@ -775,7 +791,8 @@ export function DisplayClients() {
             {displayData.map((item) => {
                 const dueDateStr = calculateDueDate(item.checkoutDate, item.duration)
                 const currentstatus = item.status === "done" ? "done" : getStatus(dueDateStr);
-                const lateInfo = getLateInfo(dueDateStr)
+                const lateDays = getLateDays(dueDateStr)
+                const lateFeeInfo = getLateFeeInfo(dueDateStr, item.lateSettledUntil)
 
                 return (<div key={item.id ?? (item.name + item.number)} style={{ gridTemplateColumns: 'repeat(19, minmax(0, 1fr))' }} className="grid px-3 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center">
                     <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-start break-keep  ">{item.name}</p>
@@ -789,16 +806,16 @@ export function DisplayClients() {
                     <p className="text-sm text-gray-800 col-span-2 flex items-center justify-center text-center break-keep  ">{item.guaranteed || "-"}</p>
                     <p dir="ltr" className="text-sm text-gray-800 col-span-1 flex items-center justify-center text-center  ">{item.Amount}</p>
                     <div className="col-span-1 flex items-center justify-center  ">
-                        {currentstatus === "due" && lateInfo.days > 0 ? (
+                        {currentstatus === "due" && lateDays > 0 ? (
                             <span className="text-sm px-2 py-0.5 rounded-full shadow-md bg-red-100 text-red-600 shadow-red-300">
-                                {lateInfo.days}d
+                                {lateDays}d
                             </span>
                         ) : "-"}
                     </div>
                     <div dir="ltr" className="col-span-1 flex items-center justify-center">
-                        {(Number(item.Bill || 0) + lateInfo.bill) > 0 ? (
+                        {(Number(item.Bill || 0) + lateFeeInfo.bill) > 0 ? (
                             <span className="text-sm px-2 py-0.5 rounded-full shadow-md bg-blue-100 text-blue-400 shadow-blue-300">
-                                {Number(item.Bill || 0) + lateInfo.bill}
+                                {Number(item.Bill || 0) + lateFeeInfo.bill}
                             </span>
                         ) : ""}
                     </div>
